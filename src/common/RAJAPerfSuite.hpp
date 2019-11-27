@@ -196,6 +196,10 @@ enum VariantID {
   RAJA_CUDA,
 #endif
 
+#if defined(RAJA_ENABLE_SYCL)
+  Base_SYCL,
+#endif
+
   NumVariants // Keep this one last and NEVER comment out (!!)
 
 };

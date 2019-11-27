@@ -109,4 +109,8 @@ void KernelBase::print(std::ostream& os) const
   os << std::endl;
 }
 
+#if defined(RAJA_ENABLE_SYCL)
+cl::sycl::queue KernelBase::qu;
+#endif
+
 }  // closing brace for rajaperf namespace

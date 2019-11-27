@@ -11,6 +11,7 @@ blt_add_library(
   SOURCES DAXPY.cpp
           DAXPY-Cuda.cpp 
           DAXPY-OMPTarget.cpp 
+          DAXPY-Sycl.cpp
           IF_QUAD.cpp 
           IF_QUAD-Cuda.cpp 
           IF_QUAD-OMPTarget.cpp 

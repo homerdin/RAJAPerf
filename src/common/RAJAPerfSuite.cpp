@@ -221,6 +221,10 @@ static const std::string VariantNames [] =
   std::string("RAJA_CUDA"),
 #endif
 
+#if defined(RAJA_ENABLE_SYCL)
+  std::string("Base_SYCL"),
+#endif
+
   std::string("Unknown Variant")  // Keep this at the end and DO NOT remove....
 
 }; // END VariantNames

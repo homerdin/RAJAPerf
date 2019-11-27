@@ -24,11 +24,11 @@ set(RAJA_PERFSUITE_EXECUTABLE_DEPENDS
     stream)
 list(APPEND RAJA_PERFSUITE_EXECUTABLE_DEPENDS ${RAJA_PERFSUITE_DEPENDS}) 
 
-if(ENABLE_TARGET_OPENMP)
+if(ENABLE_NO_LIBS)
   remove_definitions(-DRUN_RAJA_SEQ -DRUN_OPENMP )
 
 blt_add_executable(
-  NAME raja-perf-omptarget.exe
+  NAME raja-perf-no-libs.exe
   SOURCES RAJAPerfSuiteDriver.cpp
   apps/AppsData.cpp
   apps/DEL_DOT_VEC_2D.cpp
@@ -48,6 +48,7 @@ blt_add_executable(
   apps/VOL3D-OMPTarget.cpp
   basic/DAXPY.cpp
   basic/DAXPY-OMPTarget.cpp
+  basic/DAXPY-Sycl.cpp
   basic/IF_QUAD.cpp
   basic/IF_QUAD-OMPTarget.cpp
   basic/INIT3.cpp

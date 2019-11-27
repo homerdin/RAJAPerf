@@ -19,6 +19,10 @@
 #include <string>
 #include <iostream>
 
+#if defined(RAJA_ENABLE_SYCL)
+#include <CL/sycl.hpp>
+#endif
+
 namespace rajaperf {
 
 /*!
@@ -95,6 +99,10 @@ public:
   virtual void runKernel(VariantID vid) = 0;
   virtual void updateChecksum(VariantID vid) = 0;
   virtual void tearDown(VariantID vid) = 0;
+
+#if defined(RAJA_ENABLE_SYCL)
+  static cl::sycl::queue qu;
+#endif
 
 protected:
   int num_exec[NumVariants];
