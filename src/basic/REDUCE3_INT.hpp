@@ -65,6 +65,7 @@ public:
 
   void runCudaVariant(VariantID vid);
   void runOpenMPTargetVariant(VariantID vid);
+  void runSyclVariant(VariantID vid);
 
 private:
   Int_ptr m_vec;

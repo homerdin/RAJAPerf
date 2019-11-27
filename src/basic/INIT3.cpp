@@ -143,6 +143,14 @@ void INIT3::runKernel(VariantID vid)
     }
 #endif
 
+#if defined(RAJA_ENABLE_SYCL)
+    case Base_SYCL :
+    {
+      runSyclVariant(vid);
+      break;
+    }
+#endif
+
     default : {
       std::cout << "\n  INIT3 : Unknown variant id = " << vid << std::endl;
     }

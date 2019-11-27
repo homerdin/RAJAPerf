@@ -13,7 +13,7 @@
 //
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
 
-#include "DAXPY.hpp"
+#include "INIT_VIEW1D.hpp"
 
 #include "RAJA/RAJA.hpp"
 
@@ -28,16 +28,15 @@ namespace rajaperf
 namespace basic
 {
 
-#define DAXPY_DATA_SETUP_SYCL \
+#define INIT_VIEW1D_DATA_SETUP_SYCL \
   const size_t block_size = qu.get_device().get_info<cl::sycl::info::device::max_work_group_size>(); \
 \
-  cl::sycl::buffer<Real_type> d_x { m_x, getRunSize() }; \
-  cl::sycl::buffer<Real_type> d_y { m_y, getRunSize() }; \
-  Real_type a = m_a;
+  cl::sycl::buffer<Real_type> d_a {m_a, iend}; \
+  const Real_type v = m_val; \
 
-#define DAXPY_DATA_TEARDOWN_SYCL
+#define INIT_VIEW1D_DATA_TEARDOWN_SYCL
 
-void DAXPY::runSyclVariant(VariantID vid)
+void INIT_VIEW1D::runSyclVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
@@ -45,36 +44,35 @@ void DAXPY::runSyclVariant(VariantID vid)
 
   if ( vid == Base_SYCL ) {
     {
-      DAXPY_DATA_SETUP_SYCL
+      INIT_VIEW1D_DATA_SETUP_SYCL;
 
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
         qu.submit([&] (cl::sycl::handler& h)
         {
-          auto x = d_x.get_access<cl::sycl::access::mode::read>(h);
-          auto y = d_y.get_access<cl::sycl::access::mode::read_write>(h);
+          auto a = d_a.get_access<cl::sycl::access::mode::write>(h);
 
           const size_t grid_size = block_size * RAJA_DIVIDE_CEILING_INT(iend, block_size);
 
-          h.parallel_for<class syclDAXPY>(cl::sycl::nd_range<1>{grid_size, block_size},
+          h.parallel_for<class syclInit3_view1d>(cl::sycl::nd_range<1>{grid_size, block_size},
                                           [=] (cl::sycl::nd_item<1> item ) {
 
             Index_type i = item.get_group(0) * item.get_local_range(0) + item.get_local_id(0);
             if (i < iend) {
-              DAXPY_BODY
+              INIT_VIEW1D_BODY
             }
           });
         });
+
       }
       stopTimer();
-    } // Block to make sure host memory is written back
+    }
 
-    DAXPY_DATA_TEARDOWN_SYCL;
+    INIT_VIEW1D_DATA_TEARDOWN_SYCL;
 
   } else {
-     std::cout << "\n  DAXPY : Unknown Sycl variant id = " << vid << std::endl;
+     std::cout << "\n  INIT_VIEW1D : Unknown Sycl variant id = " << vid << std::endl;
   }
-
 }
 
 } // end namespace basic

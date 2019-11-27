@@ -51,18 +51,25 @@ blt_add_executable(
   basic/DAXPY-Sycl.cpp
   basic/IF_QUAD.cpp
   basic/IF_QUAD-OMPTarget.cpp
+  basic/IF_QUAD-Sycl.cpp
   basic/INIT3.cpp
   basic/INIT3-OMPTarget.cpp
+  basic/INIT3-Sycl.cpp
   basic/INIT_VIEW1D.cpp
   basic/INIT_VIEW1D-OMPTarget.cpp
+  basic/INIT_VIEW1D-Sycl.cpp
   basic/INIT_VIEW1D_OFFSET.cpp
   basic/INIT_VIEW1D_OFFSET-OMPTarget.cpp
+  basic/INIT_VIEW1D_OFFSET-Sycl.cpp
   basic/MULADDSUB.cpp
   basic/MULADDSUB-OMPTarget.cpp
+  basic/MULADDSUB-Sycl.cpp
   basic/NESTED_INIT.cpp
   basic/NESTED_INIT-OMPTarget.cpp
+  basic/NESTED_INIT-Sycl.cpp
   basic/REDUCE3_INT.cpp
   basic/REDUCE3_INT-OMPTarget.cpp
+  basic/REDUCE3_INT-Sycl.cpp
   basic/TRAP_INT.cpp
   basic/TRAP_INT-OMPTarget.cpp
   lcals/DIFF_PREDICT.cpp

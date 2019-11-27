@@ -180,6 +180,14 @@ void REDUCE3_INT::runKernel(VariantID vid)
     }
 #endif
 
+#if defined(RAJA_ENABLE_SYCL)
+    case Base_SYCL :
+    {
+      runSyclVariant(vid);
+      break;
+    }
+#endif
+
     default : {
       std::cout << "\n  REDUCE3_INT : Unknown variant id = " << vid << std::endl;
     }
