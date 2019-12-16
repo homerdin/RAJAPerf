@@ -13,23 +13,29 @@ blt_add_library(
           DEL_DOT_VEC_2D.cpp 
           DEL_DOT_VEC_2D-Cuda.cpp 
           DEL_DOT_VEC_2D-OMPTarget.cpp 
+          DEL_DOT_VEC_2D-Sycl.cpp
           ENERGY.cpp 
           ENERGY-Cuda.cpp 
           ENERGY-OMPTarget.cpp 
+          ENERGY-Sycl.cpp 
           FIR.cpp
           FIR-Cuda.cpp
           FIR-OMPTarget.cpp
+          FIR-Sycl.cpp
           LTIMES.cpp
           LTIMES-Cuda.cpp
           LTIMES-OMPTarget.cpp
           LTIMES_NOVIEW.cpp
           LTIMES_NOVIEW-Cuda.cpp
           LTIMES_NOVIEW-OMPTarget.cpp
+          LTIMES_NOVIEW-Sycl.cpp
           PRESSURE.cpp 
           PRESSURE-Cuda.cpp 
-          PRESSURE-OMPTarget.cpp 
+          PRESSURE-OMPTarget.cpp
+          PRESSURE-Sycl.cpp 
           VOL3D.cpp 
           VOL3D-Cuda.cpp 
-          VOL3D-OMPTarget.cpp 
+          VOL3D-OMPTarget.cpp
+          VOL3D-Sycl.cpp 
   DEPENDS_ON common ${RAJA_PERFSUITE_DEPENDS}
   )
