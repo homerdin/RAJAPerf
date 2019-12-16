@@ -151,6 +151,14 @@ void FIR::runKernel(VariantID vid)
     }
 #endif
 
+#if defined(RAJA_ENABLE_SYCL)
+    case Base_SYCL :
+    {
+      runSyclVariant(vid);
+      break;
+    }
+#endif
+
     default : {
       std::cout << "\n  FIR : Unknown variant id = " << vid << std::endl;
     }

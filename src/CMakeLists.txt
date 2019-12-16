@@ -33,19 +33,25 @@ blt_add_executable(
   apps/AppsData.cpp
   apps/DEL_DOT_VEC_2D.cpp
   apps/DEL_DOT_VEC_2D-OMPTarget.cpp
+  apps/DEL_DOT_VEC_2D-Sycl.cpp
   apps/ENERGY.cpp
   apps/ENERGY-OMPTarget.cpp
+  apps/ENERGY-Sycl.cpp
   apps/FIR.cpp
   apps/FIR-OMPTarget.cpp
+  apps/FIR-Sycl.cpp
   apps/PRESSURE.cpp
   apps/PRESSURE-OMPTarget.cpp
+  apps/PRESSURE-Sycl.cpp
   apps/LTIMES.cpp
   apps/LTIMES-OMPTarget.cpp
   apps/LTIMES_NOVIEW.cpp
   apps/LTIMES_NOVIEW-OMPTarget.cpp
+  apps/LTIMES_NOVIEW-Sycl.cpp
   apps/WIP-COUPLE.cpp
   apps/VOL3D.cpp
   apps/VOL3D-OMPTarget.cpp
+  apps/VOL3D-Sycl.cpp
   basic/DAXPY.cpp
   basic/DAXPY-OMPTarget.cpp
   basic/DAXPY-Sycl.cpp

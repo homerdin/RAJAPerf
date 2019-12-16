@@ -182,6 +182,14 @@ void PRESSURE::runKernel(VariantID vid)
     }
 #endif
 
+#if defined(RAJA_ENABLE_SYCL)
+    case Base_SYCL :
+    {
+      runSyclVariant(vid);
+      break;
+    }
+#endif
+
     default : {
       std::cout << "\n  PRESSURE : Unknown variant id = " << vid << std::endl;
     }
