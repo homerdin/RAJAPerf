@@ -262,6 +262,14 @@ void HYDRO_2D::runKernel(VariantID vid)
     }
 #endif
 
+#if defined(RAJA_ENABLE_SYCL)
+    case Base_SYCL :
+    {
+      runSyclVariant(vid);
+      break;
+    }
+#endif
+
     default : {
       std::cout << "\n  HYDRO_2D : Unknown variant id = " << vid << std::endl;
     }

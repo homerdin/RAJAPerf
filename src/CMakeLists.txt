@@ -80,18 +80,25 @@ blt_add_executable(
   basic/TRAP_INT-OMPTarget.cpp
   lcals/DIFF_PREDICT.cpp
   lcals/DIFF_PREDICT-OMPTarget.cpp
+  lcals/DIFF_PREDICT-Sycl.cpp
   lcals/EOS.cpp
   lcals/EOS-OMPTarget.cpp
+  lcals/EOS-Sycl.cpp
   lcals/FIRST_DIFF.cpp
   lcals/FIRST_DIFF-OMPTarget.cpp
+  lcals/FIRST_DIFF-Sycl.cpp
   lcals/HYDRO_1D.cpp
   lcals/HYDRO_1D-OMPTarget.cpp
+  lcals/HYDRO_1D-Sycl.cpp
   lcals/HYDRO_2D.cpp
   lcals/HYDRO_2D-OMPTarget.cpp
+  lcals/HYDRO_2D-Sycl.cpp
   lcals/INT_PREDICT.cpp
   lcals/INT_PREDICT-OMPTarget.cpp
+  lcals/INT_PREDICT-Sycl.cpp
   lcals/PLANCKIAN.cpp
   lcals/PLANCKIAN-OMPTarget.cpp
+  lcals/PLANCKIAN-Sycl.cpp
   polybench/POLYBENCH_2MM.cpp
   polybench/POLYBENCH_2MM-OMPTarget.cpp
   polybench/POLYBENCH_3MM.cpp

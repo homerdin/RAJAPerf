@@ -86,6 +86,7 @@ public:
 
   void runCudaVariant(VariantID vid);
   void runOpenMPTargetVariant(VariantID vid);
+  void runSyclVariant(VariantID vid);
 
 private:
   Real_ptr m_px;

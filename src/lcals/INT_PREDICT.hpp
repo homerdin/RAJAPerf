@@ -58,6 +58,7 @@ public:
 
   void runCudaVariant(VariantID vid);
   void runOpenMPTargetVariant(VariantID vid);
+  void runSyclVariant(VariantID vid);
 
 private:
   Index_type m_array_length;

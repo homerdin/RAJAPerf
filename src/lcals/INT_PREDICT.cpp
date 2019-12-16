@@ -157,6 +157,14 @@ void INT_PREDICT::runKernel(VariantID vid)
     }
 #endif
 
+#if defined(RAJA_ENABLE_SYCL)
+    case Base_SYCL :
+    {
+      runSyclVariant(vid);
+      break;
+    }
+#endif
+
     default : {
       std::cout << "\n  INT_PREDICT : Unknown variant id = " << vid << std::endl;
     }
