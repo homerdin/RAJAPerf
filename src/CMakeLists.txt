@@ -140,14 +140,18 @@ blt_add_executable(
   polybench/POLYBENCH_MVT-Sycl.cpp
   stream/ADD.cpp
   stream/ADD-OMPTarget.cpp
+  stream/ADD-Sycl.cpp
   stream/COPY.cpp
   stream/COPY-OMPTarget.cpp
+  stream/COPY-Sycl.cpp
   stream/DOT.cpp
   stream/DOT-OMPTarget.cpp
   stream/MUL.cpp
   stream/MUL-OMPTarget.cpp
+  stream/MUL-Sycl.cpp
   stream/TRIAD.cpp
   stream/TRIAD-OMPTarget.cpp
+  stream/TRIAD-Sycl.cpp
   common/DataUtils.cpp
   common/Executor.cpp
   common/KernelBase.cpp
