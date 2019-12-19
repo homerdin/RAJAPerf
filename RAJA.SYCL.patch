@@ -1,0 +1,24 @@
+diff --git a/cmake/SetupRajaConfig.cmake b/cmake/SetupRajaConfig.cmake
+index d0b31ff..51b2879 100644
+--- a/cmake/SetupRajaConfig.cmake
++++ b/cmake/SetupRajaConfig.cmake
+@@ -59,6 +59,7 @@ set(RAJA_ENABLE_TARGET_OPENMP ${ENABLE_TARGET_OPENMP})
+ set(RAJA_ENABLE_TBB ${ENABLE_TBB})
+ set(RAJA_ENABLE_CUDA ${ENABLE_CUDA})
+ set(RAJA_ENABLE_CLANG_CUDA ${ENABLE_CLANG_CUDA})
++set(RAJA_ENABLE_SYCL ${ENABLE_SYCL})
+ set(RAJA_ENABLE_CUB ${ENABLE_CUB})
+ 
+ # Configure a header file with all the variables we found.
+diff --git a/include/RAJA/config.hpp.in b/include/RAJA/config.hpp.in
+index 602758f..cfd2004 100644
+--- a/include/RAJA/config.hpp.in
++++ b/include/RAJA/config.hpp.in
+@@ -89,6 +89,7 @@
+ #cmakedefine RAJA_ENABLE_TBB
+ #cmakedefine RAJA_ENABLE_CUDA
+ #cmakedefine RAJA_ENABLE_CLANG_CUDA
++#cmakedefine RAJA_ENABLE_SYCL
+ 
+ /*!
+  ******************************************************************************
