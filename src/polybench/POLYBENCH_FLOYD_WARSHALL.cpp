@@ -228,6 +228,14 @@ void POLYBENCH_FLOYD_WARSHALL::runKernel(VariantID vid)
     }
 #endif
 
+#if defined(RAJA_ENABLE_SYCL)
+    case Base_SYCL :
+    {
+      runSyclVariant(vid);
+      break;
+    }
+#endif
+
     default : {
       std::cout << "\n  POLYBENCH_FLOYD_WARSHALL : Unknown variant id = " << vid << std::endl;
     }

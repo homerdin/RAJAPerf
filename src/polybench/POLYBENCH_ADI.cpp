@@ -329,6 +329,14 @@ void POLYBENCH_ADI::runKernel(VariantID vid)
     }
 #endif
 
+#if defined(RAJA_ENABLE_SYCL)
+    case Base_SYCL :
+    {
+      runSyclVariant(vid);
+      break;
+    }
+#endif
+
     default : {
       std::cout << "\nPOLYBENCH_ADI  Unknown variant id = " << vid << std::endl;
     }

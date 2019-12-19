@@ -55,6 +55,7 @@ public:
   void tearDown(VariantID vid);
   void runCudaVariant(VariantID vid);
   void runOpenMPTargetVariant(VariantID vid);
+  void runSyclVariant(VariantID vid);
 
 private:
   Index_type m_N;
