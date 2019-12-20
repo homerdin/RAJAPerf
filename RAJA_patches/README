@@ -1,0 +1,4 @@
+RAJA.SYCL.patch - patch to apply to RAJA to build SYCL variant
+
+sycl.cmake - cmake config file for building SYCL variant.
+             Place into RAJA/host-configs/alcf-builds/
