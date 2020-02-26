@@ -22,6 +22,7 @@
 #include <iostream>
 
 #include <CL/sycl.hpp>
+#include "common/SyclDataUtils.hpp"
 
 namespace rajaperf 
 {
@@ -32,7 +33,10 @@ namespace lcals
   const size_t block_size = qu.get_device().get_info<cl::sycl::info::device::max_work_group_size>(); \
 \
   cl::sycl::buffer<Real_type> d_x {m_x, m_array_length}; \
-  cl::sycl::buffer<Real_type> d_y {m_y, m_array_length};
+  cl::sycl::buffer<Real_type> d_y {m_y, m_array_length}; \
+\
+  force_memcpy_real(d_x, qu); \
+  force_memcpy_real(d_y, qu);
 
 #define FIRST_DIFF_DATA_TEARDOWN_SYCL
 
@@ -65,6 +69,7 @@ void FIRST_DIFF::runSyclVariant(VariantID vid)
           });
         });
       }
+      qu.wait(); // Wait for computation to finish before stopping timer
       stopTimer();
     }
 

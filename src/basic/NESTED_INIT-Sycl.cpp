@@ -22,6 +22,7 @@
 #include <iostream>
 
 #include <CL/sycl.hpp>
+#include "common/SyclDataUtils.hpp"
 
 namespace rajaperf
 {
@@ -36,6 +37,8 @@ namespace basic
   unsigned long ni = m_ni; \
   unsigned long nj = m_nj; \
   unsigned long nk = m_nk; \
+\
+  force_memcpy_real(d_array, qu);
 
 #define NESTED_INIT_DATA_TEARDOWN_SYCL
 
@@ -65,6 +68,7 @@ void NESTED_INIT::runSyclVariant(VariantID vid)
           });
         });
       }
+      qu.wait(); // Wait for computation to finish before stopping timer
       stopTimer();
     } // Block to trigger buffer destruction
 

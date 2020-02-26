@@ -23,6 +23,7 @@
 #include <iostream>
 
 #include <CL/sycl.hpp>
+#include "common/SyclDataUtils.hpp"
 
 namespace rajaperf 
 {
@@ -38,6 +39,11 @@ namespace polybench
   cl::sycl::buffer<Real_type> d_ex {m_ex, m_nx * m_ny}; \
   cl::sycl::buffer<Real_type> d_ey {m_ey, m_nx * m_ny}; \
   cl::sycl::buffer<Real_type> d_hz {m_hz, m_nx * m_ny}; \
+\
+  force_memcpy_real(d_fict, qu); \
+  force_memcpy_real(d_ex, qu); \
+  force_memcpy_real(d_ey, qu); \
+  force_memcpy_real(d_hz, qu);
 
 #define POLYBENCH_FDTD_2D_TEARDOWN_SYCL
 
@@ -113,7 +119,7 @@ void POLYBENCH_FDTD_2D::runSyclVariant(VariantID vid)
         } // tstep loop
 
       } // run_reps
-
+      qu.wait(); // Wait for computation to finish before stopping timer
       stopTimer();
     } // Buffer scope
 

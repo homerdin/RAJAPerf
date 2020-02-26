@@ -22,6 +22,7 @@
 #include <iostream>
 
 #include <CL/sycl.hpp>
+#include "common/SyclDataUtils.hpp"
 
 namespace rajaperf 
 {
@@ -38,6 +39,10 @@ namespace apps
   unsigned long num_z = m_num_z; \
   unsigned long num_g = m_num_g; \
   unsigned long num_m = m_num_m; \
+\
+  force_memcpy_real(d_phidat, qu); \
+  force_memcpy_real(d_elldat, qu); \
+  force_memcpy_real(d_psidat, qu);
 
 #define LTIMES_NOVIEW_DATA_TEARDOWN_SYCL
 
@@ -71,7 +76,7 @@ void LTIMES_NOVIEW::runSyclVariant(VariantID vid)
           });
         });
       }
-      
+      qu.wait(); // Wait for computation to finish before stopping timer      
       stopTimer();
     }
 

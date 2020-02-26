@@ -22,6 +22,7 @@
 #include <iostream>
 
 #include <CL/sycl.hpp>
+#include "common/SyclDataUtils.hpp"
 
 namespace rajaperf 
 {
@@ -37,6 +38,10 @@ namespace lcals
   const Real_type q = m_q; \
   const Real_type r = m_r; \
   const Real_type t = m_t; \
+\
+  force_memcpy_real(d_x, qu); \
+  force_memcpy_real(d_y, qu); \
+  force_memcpy_real(d_z, qu); \
 
 #define HYDRO_1D_DATA_TEARDOWN_SYCL
 
@@ -70,7 +75,8 @@ void HYDRO_1D::runSyclVariant(VariantID vid)
           });
         });
       }
-    stopTimer();
+      qu.wait(); // Wait for computation to finish before stopping timer
+      stopTimer();
     }
 
   HYDRO_1D_DATA_TEARDOWN_SYCL;

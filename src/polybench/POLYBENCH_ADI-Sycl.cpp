@@ -23,6 +23,7 @@
 #include <iostream>
 
 #include <CL/sycl.hpp>
+#include "common/SyclDataUtils.hpp"
 
 namespace rajaperf 
 {
@@ -42,6 +43,11 @@ namespace polybench
   Real_type B1,B2; \
   Real_type mul1,mul2; \
   Real_type a,b,c,d,e,f; \
+\
+  force_memcpy_real(d_U, qu); \
+  force_memcpy_real(d_V, qu); \
+  force_memcpy_real(d_P, qu); \
+  force_memcpy_real(d_Q, qu);
 
 #define POLYBENCH_ADI_TEARDOWN_SYCL
 
@@ -107,6 +113,7 @@ void POLYBENCH_ADI::runSyclVariant(VariantID vid)
           });
         }  // tstep loop
       }
+      qu.wait(); // Wait for computation to finish before stopping timer
       stopTimer();
     } // Trigger buffer destruction
 

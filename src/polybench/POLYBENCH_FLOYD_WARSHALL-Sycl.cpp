@@ -23,6 +23,7 @@
 #include <iostream>
 
 #include <CL/sycl.hpp>
+#include "common/SyclDataUtils.hpp"
 
 namespace rajaperf 
 {
@@ -31,7 +32,10 @@ namespace polybench
 
 #define POLYBENCH_FLOYD_WARSHALL_DATA_SETUP_SYCL \
   cl::sycl::buffer<Real_type> d_pin {m_pin, m_N * m_N}; \
-  cl::sycl::buffer<Real_type> d_pout {m_pout, m_N * m_N};
+  cl::sycl::buffer<Real_type> d_pout {m_pout, m_N * m_N}; \
+\
+  force_memcpy_real(d_pin, qu); \
+  force_memcpy_real(d_pout, qu);
 
 #define POLYBENCH_FLOYD_WARSHALL_TEARDOWN_SYCL
 
@@ -73,7 +77,7 @@ void POLYBENCH_FLOYD_WARSHALL::runSyclVariant(VariantID vid)
           });
         }
       }
-
+      qu.wait(); // Wait for computation to finish before stopping timer
       stopTimer();
     } // buffer scope
 

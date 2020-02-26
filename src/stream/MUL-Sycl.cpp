@@ -22,6 +22,7 @@
 #include <iostream>
 
 #include <CL/sycl.hpp>
+#include "common/SyclDataUtils.hpp"
 
 namespace rajaperf 
 {
@@ -35,6 +36,9 @@ namespace stream
   cl::sycl::buffer<Real_type> d_c {m_c, iend}; \
 \
   Real_type alpha = m_alpha; \
+\
+  force_memcpy_real(d_b, qu); \
+  force_memcpy_real(d_c, qu);
 
 #define MUL_DATA_TEARDOWN_SYCL
 
@@ -69,7 +73,7 @@ void MUL::runSyclVariant(VariantID vid)
           });
         });
       }
-
+      qu.wait(); // Wait for computation to finish before stopping timer
       stopTimer();
     }
 

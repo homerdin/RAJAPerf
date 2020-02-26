@@ -22,6 +22,7 @@
 #include <iostream>
 
 #include <CL/sycl.hpp>
+#include "common/SyclDataUtils.hpp"
 
 namespace rajaperf 
 {
@@ -34,6 +35,9 @@ namespace lcals
   cl::sycl::buffer<Real_type> d_px { m_px, m_array_length }; \
   cl::sycl::buffer<Real_type> d_cx { m_cx, m_array_length }; \
   const Index_type offset = m_offset; \
+\
+  force_memcpy_real(d_px, qu); \
+  force_memcpy_real(d_cx, qu);
 
 #define DIFF_PREDICT_DATA_TEARDOWN_SYCL
 
@@ -66,7 +70,7 @@ void DIFF_PREDICT::runSyclVariant(VariantID vid)
           });
         });
       }
-
+      qu.wait(); // Wait for computation to finish before stopping timer
       stopTimer();
     } // Block to trigger buffer destruction
 

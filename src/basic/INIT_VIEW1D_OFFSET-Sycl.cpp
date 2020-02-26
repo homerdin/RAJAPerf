@@ -22,23 +22,20 @@
 #include <iostream>
 
 #include <CL/sycl.hpp>
+#include "common/SyclDataUtils.hpp"
 
 namespace rajaperf
 {
 namespace basic
 {
 
-  //
-  // Define thread block size for CUDA execution
-  //
-  const size_t block_size = 256;
-
-
 #define INIT_VIEW1D_OFFSET_DATA_SETUP_SYCL \
   const size_t block_size = qu.get_device().get_info<cl::sycl::info::device::max_work_group_size>(); \
 \
   cl::sycl::buffer<Real_type> d_a {m_a, iend}; \
   const Real_type v = m_val; \
+\
+  force_memcpy_real(d_a, qu);
 
 #define INIT_VIEW1D_OFFSET_DATA_TEARDOWN_SYCL
 
@@ -73,7 +70,7 @@ void INIT_VIEW1D_OFFSET::runSyclVariant(VariantID vid)
         });
 
       }
-
+      qu.wait(); // Wait for computation to finish before stopping timer
       stopTimer();
     }
 

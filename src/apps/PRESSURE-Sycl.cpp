@@ -22,6 +22,7 @@
 #include <iostream>
 
 #include <CL/sycl.hpp>
+#include "common/SyclDataUtils.hpp"
 
 namespace rajaperf 
 {
@@ -41,6 +42,12 @@ namespace apps
   const Real_type p_cut = m_p_cut; \
   const Real_type pmin = m_pmin; \
   const Real_type eosvmax = m_eosvmax; \
+\
+  force_memcpy_real(d_compression, qu); \
+  force_memcpy_real(d_bvc, qu); \
+  force_memcpy_real(d_p_new, qu); \
+  force_memcpy_real(d_e_old, qu); \
+  force_memcpy_real(d_vnewc, qu);
 
 #define PRESSURE_DATA_TEARDOWN_SYCL
 
@@ -95,7 +102,7 @@ void PRESSURE::runSyclVariant(VariantID vid)
           });
         });
       }
-
+      qu.wait(); // Wait for computation to finish before stopping timer
       stopTimer();
     }
 

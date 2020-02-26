@@ -24,6 +24,7 @@
 #include <iostream>
 
 #include <CL/sycl.hpp>
+#include "common/SyclDataUtils.hpp"
 
 namespace rajaperf 
 {
@@ -39,6 +40,11 @@ namespace apps
   cl::sycl::buffer<Real_type> d_vol {m_vol, m_array_length}; \
 \
   const Real_type vnormq = m_vnormq; \
+\
+  force_memcpy_real(d_x, qu); \
+  force_memcpy_real(d_y, qu); \
+  force_memcpy_real(d_z, qu); \
+  force_memcpy_real(d_vol, qu);
 
 #define VOL3D_DATA_TEARDOWN_SYCL \
 
@@ -115,7 +121,7 @@ void VOL3D::runSyclVariant(VariantID vid)
           });
         });
       }
-
+      qu.wait(); // Wait for computation to finish before stopping timer
       stopTimer();
     } // Buffer Destruction
  

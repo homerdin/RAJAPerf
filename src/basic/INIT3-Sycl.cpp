@@ -22,6 +22,7 @@
 #include <iostream>
 
 #include <CL/sycl.hpp>
+#include "common/SyclDataUtils.hpp"
 
 namespace rajaperf
 {
@@ -35,7 +36,13 @@ namespace basic
   cl::sycl::buffer<Real_type> d_out2 {m_out2, iend}; \
   cl::sycl::buffer<Real_type> d_out3 {m_out3, iend}; \
   cl::sycl::buffer<Real_type> d_in1 {m_in1, iend}; \
-  cl::sycl::buffer<Real_type> d_in2 {m_in2, iend};
+  cl::sycl::buffer<Real_type> d_in2 {m_in2, iend}; \
+\
+  force_memcpy_real(d_out1, qu); \
+  force_memcpy_real(d_out2, qu); \
+  force_memcpy_real(d_out3, qu); \
+  force_memcpy_real(d_in1, qu); \
+  force_memcpy_real(d_in2, qu);
 
 #define INIT3_DATA_TEARDOWN_SYCL
 
@@ -71,7 +78,7 @@ void INIT3::runSyclVariant(VariantID vid)
           });
         });
       }
-
+      qu.wait(); // Wait for computation to finish before stopping timer
       stopTimer();
     } // Block to trigger buffer destruction
 

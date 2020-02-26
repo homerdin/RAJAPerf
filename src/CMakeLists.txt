@@ -159,6 +159,7 @@ blt_add_executable(
   common/RAJAPerfSuite.cpp
   common/RPTypes.hpp
   common/RunParams.cpp
+  common/SyclDataUtils.cpp
   DEPENDS_ON ${RAJA_PERFSUITE_DEPENDS}
 )
 

@@ -22,6 +22,7 @@
 #include <iostream>
 
 #include <CL/sycl.hpp>
+#include "common/SyclDataUtils.hpp"
 
 namespace rajaperf 
 {
@@ -32,7 +33,10 @@ namespace stream
   const size_t block_size = qu.get_device().get_info<cl::sycl::info::device::max_work_group_size>(); \
 \
   cl::sycl::buffer<Real_type> d_a {m_a, iend}; \
-  cl::sycl::buffer<Real_type> d_c {m_c, iend}; 
+  cl::sycl::buffer<Real_type> d_c {m_c, iend}; \
+\
+  force_memcpy_real(d_a, qu); \
+  force_memcpy_real(d_c, qu); 
 
 #define COPY_DATA_TEARDOWN_SYCL
 
@@ -65,7 +69,7 @@ void COPY::runSyclVariant(VariantID vid)
           });
         });
       }
-
+      qu.wait(); // Wait for computation to finish before stopping timer
       stopTimer();
     } // Buffer Destruction
 

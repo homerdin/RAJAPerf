@@ -23,6 +23,7 @@
 #include <iostream>
 
 #include <CL/sycl.hpp>
+#include "common/SyclDataUtils.hpp"
 
 namespace rajaperf 
 {
@@ -36,7 +37,11 @@ namespace apps
   cl::sycl::buffer<Real_type> d_out {m_out, getRunSize()}; \
   cl::sycl::buffer<Real_type> d_coeff {coeff_array, FIR_COEFFLEN}; \
 \
-  const Index_type coefflen = m_coefflen;
+  const Index_type coefflen = m_coefflen; \
+\
+  force_memcpy_real(d_in, qu); \
+  force_memcpy_real(d_out, qu); \
+  force_memcpy_real(d_coeff, qu);
 
 #define FIR_DATA_TEARDOWN_SYCL
 
@@ -74,7 +79,7 @@ void FIR::runSyclVariant(VariantID vid)
           });
         });
       }
-
+      qu.wait(); // Wait for computation to finish before stopping timer
       stopTimer();
     }
 

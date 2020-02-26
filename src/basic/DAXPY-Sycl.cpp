@@ -22,6 +22,7 @@
 #include <iostream>
 
 #include <CL/sycl.hpp>
+#include "common/SyclDataUtils.hpp"
 
 namespace rajaperf
 {
@@ -33,7 +34,10 @@ namespace basic
 \
   cl::sycl::buffer<Real_type> d_x { m_x, getRunSize() }; \
   cl::sycl::buffer<Real_type> d_y { m_y, getRunSize() }; \
-  Real_type a = m_a;
+  Real_type a = m_a; \
+\
+  force_memcpy_real(d_x, qu); \
+  force_memcpy_real(d_y, qu); \
 
 #define DAXPY_DATA_TEARDOWN_SYCL
 
@@ -66,6 +70,7 @@ void DAXPY::runSyclVariant(VariantID vid)
           });
         });
       }
+      qu.wait(); // Wait for computation to finish before stopping timer
       stopTimer();
     } // Block to make sure host memory is written back
 

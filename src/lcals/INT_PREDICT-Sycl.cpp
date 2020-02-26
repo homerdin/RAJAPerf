@@ -22,6 +22,7 @@
 #include <iostream>
 
 #include <CL/sycl.hpp>
+#include "common/SyclDataUtils.hpp"
 
 namespace rajaperf 
 {
@@ -40,7 +41,9 @@ namespace lcals
   Real_type dm27 = m_dm27; \
   Real_type dm28 = m_dm28; \
   Real_type c0 = m_c0; \
-  const Index_type offset = m_offset;
+  const Index_type offset = m_offset; \
+\
+  force_memcpy_real(d_px, qu);
 
 #define INT_PREDICT_DATA_TEARDOWN_SYCL
 
@@ -72,7 +75,7 @@ void INT_PREDICT::runSyclVariant(VariantID vid)
           });
         });
       }
-
+      qu.wait(); // Wait for computation to finish before stopping timer
       stopTimer();
     } // Block to trigger buffer destruction
 

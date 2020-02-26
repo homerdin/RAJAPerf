@@ -22,6 +22,7 @@
 #include <iostream>
 
 #include <CL/sycl.hpp>
+#include "common/SyclDataUtils.hpp"
 
 namespace rajaperf 
 {
@@ -50,6 +51,22 @@ namespace apps
   const Real_type e_cut = m_e_cut; \
   const Real_type emin = m_emin; \
   const Real_type q_cut = m_q_cut; \
+\
+  force_memcpy_real(d_e_new, qu); \
+  force_memcpy_real(d_e_old, qu); \
+  force_memcpy_real(d_delvc, qu); \
+  force_memcpy_real(d_p_new, qu); \
+  force_memcpy_real(d_p_old, qu); \
+  force_memcpy_real(d_q_new, qu); \
+  force_memcpy_real(d_q_old, qu); \
+  force_memcpy_real(d_work, qu); \
+  force_memcpy_real(d_compHalfStep, qu); \
+  force_memcpy_real(d_pHalfStep, qu); \
+  force_memcpy_real(d_bvc, qu); \
+  force_memcpy_real(d_pbvc, qu); \
+  force_memcpy_real(d_ql_old, qu); \
+  force_memcpy_real(d_qq_old, qu); \
+  force_memcpy_real(d_vnewc, qu);
 
 #define ENERGY_DATA_TEARDOWN_SYCL
 
@@ -200,7 +217,7 @@ void ENERGY::runSyclVariant(VariantID vid)
           });
         });
       }
-
+      qu.wait(); // Wait for computation to finish before stopping timer
       stopTimer();
     } // Buffer Destruction
 

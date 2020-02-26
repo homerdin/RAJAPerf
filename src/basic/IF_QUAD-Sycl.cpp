@@ -22,6 +22,7 @@
 #include <iostream>
 
 #include <CL/sycl.hpp>
+#include "common/SyclDataUtils.hpp"
 
 namespace rajaperf
 {
@@ -35,7 +36,13 @@ namespace basic
   cl::sycl::buffer<Real_type> d_b {m_b, iend}; \
   cl::sycl::buffer<Real_type> d_c {m_c, iend}; \
   cl::sycl::buffer<Real_type> d_x1 {m_x1, iend}; \
-  cl::sycl::buffer<Real_type> d_x2 {m_x2, iend};
+  cl::sycl::buffer<Real_type> d_x2 {m_x2, iend}; \
+\
+  force_memcpy_real(d_a, qu); \
+  force_memcpy_real(d_b, qu); \
+  force_memcpy_real(d_c, qu); \
+  force_memcpy_real(d_x1, qu); \
+  force_memcpy_real(d_x2, qu);
 
 #define IF_QUAD_DATA_TEARDOWN_SYCL
 
@@ -76,6 +83,7 @@ void IF_QUAD::runSyclVariant(VariantID vid)
            });
          });
       }
+    qu.wait(); // Wait for computation to finish before stopping timer
     stopTimer();
     }
 

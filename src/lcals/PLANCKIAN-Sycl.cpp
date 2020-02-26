@@ -23,6 +23,7 @@
 #include <cmath>
 
 #include <CL/sycl.hpp>
+#include "common/SyclDataUtils.hpp"
 
 namespace rajaperf 
 {
@@ -37,6 +38,12 @@ namespace lcals
   cl::sycl::buffer<Real_type> d_u {m_u, iend}; \
   cl::sycl::buffer<Real_type> d_v {m_v, iend}; \
   cl::sycl::buffer<Real_type> d_w {m_w, iend}; \
+\
+  force_memcpy_real(d_x, qu); \
+  force_memcpy_real(d_y, qu); \
+  force_memcpy_real(d_u, qu); \
+  force_memcpy_real(d_v, qu); \
+  force_memcpy_real(d_w, qu);
 
 #define PLANCKIAN_DATA_TEARDOWN_SYCL
 
@@ -74,7 +81,7 @@ void PLANCKIAN::runSyclVariant(VariantID vid)
           });
         });
       }
-
+      qu.wait(); // Wait for computation to finish before stopping timer
       stopTimer();
     }
 

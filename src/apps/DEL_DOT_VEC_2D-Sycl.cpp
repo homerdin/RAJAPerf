@@ -24,6 +24,7 @@
 #include <iostream>
 
 #include <CL/sycl.hpp>
+#include "common/SyclDataUtils.hpp"
 
 namespace rajaperf 
 {
@@ -42,6 +43,13 @@ namespace apps
 \
   const Real_type ptiny = m_ptiny; \
   const Real_type half = m_half; \
+\
+  force_memcpy_real(d_div, qu); \
+  force_memcpy_index(d_real_zones, qu); \
+  force_memcpy_real(d_x, qu); \
+  force_memcpy_real(d_y, qu); \
+  force_memcpy_real(d_xdot, qu); \
+  force_memcpy_real(d_ydot, qu);
 
 #define DEL_DOT_VEC_2D_DATA_TEARDOWN_SYCL
 
@@ -103,6 +111,7 @@ void DEL_DOT_VEC_2D::runSyclVariant(VariantID vid)
         });
       
       }
+      qu.wait(); // Wait for computation to finish before stopping timer
       stopTimer();
     } // Buffer Destruction
 

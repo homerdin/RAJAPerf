@@ -23,6 +23,7 @@
 #include <iostream>
 
 #include <CL/sycl.hpp>
+#include "common/SyclDataUtils.hpp"
 
 namespace rajaperf 
 {
@@ -39,7 +40,11 @@ namespace polybench
 \
   cl::sycl::buffer<Real_type> d_A {m_A, ni*nk}; \
   cl::sycl::buffer<Real_type> d_B {m_B, nk*nj}; \
-  cl::sycl::buffer<Real_type> d_C {m_C, ni*nj};
+  cl::sycl::buffer<Real_type> d_C {m_C, ni*nj}; \
+\
+  force_memcpy_real(d_A, qu); \
+  force_memcpy_real(d_B, qu); \
+  force_memcpy_real(d_C, qu);
 
 #define POLYBENCH_GEMM_TEARDOWN_SYCL
 
@@ -72,7 +77,7 @@ void POLYBENCH_GEMM::runSyclVariant(VariantID vid)
           });
         });
       }
-
+      qu.wait(); // Wait for computation to finish before stopping timer
       stopTimer();
     } // buffer scope
 

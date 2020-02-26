@@ -23,6 +23,7 @@
 #include <iostream>
 
 #include <CL/sycl.hpp>
+#include "common/SyclDataUtils.hpp"
 
 namespace rajaperf 
 {
@@ -34,7 +35,10 @@ namespace polybench
   cl::sycl::buffer<Real_type> d_B {m_Binit, m_N}; \
 \
   d_A.set_final_data(m_A); \
-  d_B.set_final_data(m_B);
+  d_B.set_final_data(m_B); \
+\
+  force_memcpy_real(d_A, qu); \
+  force_memcpy_real(d_B, qu);
 
 #define POLYBENCH_JACOBI_1D_TEARDOWN_SYCL
 
@@ -82,7 +86,7 @@ void POLYBENCH_JACOBI_1D::runSyclVariant(VariantID vid)
           });
         }
       }
-
+      qu.wait(); // Wait for computation to finish before stopping timer
       stopTimer();
     }
 

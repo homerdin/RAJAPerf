@@ -24,6 +24,7 @@
 #include <cmath>
 
 #include <CL/sycl.hpp>
+#include "common/SyclDataUtils.hpp"
 
 namespace rajaperf 
 {
@@ -41,6 +42,12 @@ namespace polybench
 \
   Real_type alpha = m_alpha; \
   Real_type beta = m_beta; \
+\
+  force_memcpy_real(d_tmp, qu); \
+  force_memcpy_real(d_A, qu); \
+  force_memcpy_real(d_B, qu); \
+  force_memcpy_real(d_C, qu); \
+  force_memcpy_real(d_D, qu);
 
 #define POLYBENCH_2MM_TEARDOWN_SYCL
 
@@ -111,6 +118,7 @@ void POLYBENCH_2MM::runSyclVariant(VariantID vid)
           });
         });
       }
+      qu.wait(); // Wait for computation to finish before stopping timer
       stopTimer();
     }
 
