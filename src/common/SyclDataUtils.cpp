@@ -28,6 +28,7 @@ void force_memcpy_index(cl::sycl::buffer<Index_type, 1> buf, cl::sycl::queue q) 
     h.single_task<class forceMemcpy_Index_t>([=]() {acc[0];});
   });
 
+  q.wait();
 }
 
 void force_memcpy_real(cl::sycl::buffer<Real_type, 1> buf, cl::sycl::queue q) {
@@ -37,6 +38,8 @@ void force_memcpy_real(cl::sycl::buffer<Real_type, 1> buf, cl::sycl::queue q) {
         buf, h, buf.get_size());
     h.single_task<class forceMemcpy_Real_t>([=]() {acc[0];});
   });
+
+  q.wait();
 
 }
 
@@ -48,6 +51,7 @@ void force_memcpy_int(cl::sycl::buffer<Int_type, 1> buf, cl::sycl::queue q) {
     h.single_task<class forceMemcpy_Int_t>([=]() {acc[0];});
   });
 
+  q.wait();
 }
 
 }  // closing brace for rajaperf namespace
