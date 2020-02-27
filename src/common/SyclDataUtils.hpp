@@ -34,7 +34,8 @@ namespace rajaperf
 template <typename T>
 void initSyclDeviceData(T& dptr, const T hptr, int len, cl::sycl::queue q)
 {
-  q.memcpy(dptr, hptr, len * sizeof(typename std::remove_pointer<T>::type));
+  auto e = q.memcpy(dptr, hptr, len * sizeof(typename std::remove_pointer<T>::type));
+  e.wait();
 
   incDataInitCount();
 }
@@ -46,7 +47,7 @@ void initSyclDeviceData(T& dptr, const T hptr, int len, cl::sycl::queue q)
 template <typename T>
 void allocAndInitSyclDeviceData(T& dptr, const T hptr, int len, cl::sycl::queue q)
 {
-  dptr = (T*) cl::sycl::malloc_device(len * sizeof(typename std::remove_pointer<T>::type), q);
+  dptr = (T) cl::sycl::malloc_device(len * sizeof(typename std::remove_pointer<T>::type), q);
 
   initSyclDeviceData(dptr, hptr, len, q);
 }
@@ -60,7 +61,8 @@ void allocAndInitSyclDeviceData(T& dptr, const T hptr, int len, cl::sycl::queue 
 template <typename T>
 void getSyclDeviceData(T& hptr, const T dptr, int len, cl::sycl::queue q)
 {
-  q.memcpy(htpr, dptr, len * sizeof(typename std::remove_pointer<T>::type));
+  auto e = q.memcpy(hptr, dptr, len * sizeof(typename std::remove_pointer<T>::type));
+  e.wait();
 }
 
 /*!
