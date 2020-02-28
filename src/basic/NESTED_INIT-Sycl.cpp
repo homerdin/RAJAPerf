@@ -22,6 +22,7 @@
 #include <iostream>
 
 #include <CL/sycl.hpp>
+#include "common/SyclDataUtils.hpp"
 
 namespace rajaperf
 {
@@ -29,44 +30,44 @@ namespace basic
 {
 
 #define NESTED_INIT_DATA_SETUP_SYCL \
-  cl::sycl::default_selector device_selector; \
-  cl::sycl::queue q(device_selector); \
+  const size_t block_size = qu.get_device().get_info<cl::sycl::info::device::max_work_group_size>(); \
 \
-  cl::sycl::buffer<Real_type> d_array { m_array, m_array_length }; \
+  Real_ptr array; \
   unsigned long ni = m_ni; \
   unsigned long nj = m_nj; \
   unsigned long nk = m_nk; \
+\
+  allocAndInitSyclDeviceData(array, m_array, m_array_length, qu);
 
-#define NESTED_INIT_DATA_TEARDOWN_SYCL
+#define NESTED_INIT_DATA_TEARDOWN_SYCL \
+  getSyclDeviceData(m_array, array, m_array_length, qu); \
+  deallocSyclDeviceData(array, qu);
 
 void NESTED_INIT::runSyclVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
 
   if ( vid == Base_SYCL ) {
-    {
-      NESTED_INIT_DATA_SETUP_SYCL;
+    NESTED_INIT_DATA_SETUP_SYCL;
 
-      startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
-        qu.submit([&] (cl::sycl::handler& h)
-        {
-          auto array = d_array.get_access<cl::sycl::access::mode::write>(h);
+    startTimer();
+    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      qu.submit([&] (cl::sycl::handler& h)
+      {
+        h.parallel_for(cl::sycl::range<3> {nk, nj, ni},  
+                       [=] (cl::sycl::item<3> item) {
 
-          h.parallel_for<class syclNestedInit>(cl::sycl::range<3> {nk, nj, ni},
-                                               [=] (cl::sycl::item<3> item) {
+          Index_type i = item.get_id(2);
+          Index_type j = item.get_id(1);
+          Index_type k = item.get_id(0);
 
-            Index_type i = item.get_id(2);
-            Index_type j = item.get_id(1);
-            Index_type k = item.get_id(0);
+          NESTED_INIT_BODY
 
-            NESTED_INIT_BODY
-
-          });
         });
-      }
-      stopTimer();
-    } // Block to trigger buffer destruction
+      });
+    }
+    qu.wait(); // Wait for computation to finish before stoping timer
+    stopTimer();
 
     NESTED_INIT_DATA_TEARDOWN_SYCL;
 

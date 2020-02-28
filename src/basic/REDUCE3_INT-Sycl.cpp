@@ -45,7 +45,7 @@ void REDUCE3_INT::runSyclVariant(VariantID vid)
   const Index_type ibegin = 0;
   const unsigned long iend = getRunSize();
 
-  if ( vid == Base_SYCL ) {
+  if ( vid == Base_SYCL && 0 ) {
     {
 
       REDUCE3_INT_DATA_SETUP_SYCL;
