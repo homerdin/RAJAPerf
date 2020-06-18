@@ -18,6 +18,7 @@ blt_add_library(
           POLYBENCH_3MM-Cuda.cpp
           POLYBENCH_3MM-OMP.cpp
           POLYBENCH_3MM-OMPTarget.cpp
+          POLYBENCH_3MM-Sycl.cpp
           POLYBENCH_ADI.cpp
           POLYBENCH_ADI-Seq.cpp
           POLYBENCH_ADI-Cuda.cpp

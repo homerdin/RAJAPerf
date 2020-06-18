@@ -123,7 +123,7 @@ enum KernelID {
   Lcals_INT_PREDICT,
   Lcals_PLANCKIAN,
   Lcals_TRIDIAG_ELIM,
-
+#ifdef BRIAN
 //
 // Polybench kernels...
 //
@@ -140,7 +140,7 @@ enum KernelID {
   Polybench_JACOBI_1D,
   Polybench_JACOBI_2D,
   Polybench_MVT,
-
+#endif
 //
 // Stream kernels...
 //
@@ -201,6 +201,11 @@ enum VariantID {
 #if defined(RAJA_ENABLE_CUDA)
   Base_CUDA,
   RAJA_CUDA,
+#endif
+
+#if defined(RAJA_ENABLE_SYCL)
+  Base_SYCL,
+  RAJA_SYCL,
 #endif
 
   NumVariants // Keep this one last and NEVER comment out (!!)

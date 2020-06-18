@@ -53,6 +53,7 @@ public:
   void runOpenMPVariant(VariantID vid);
   void runCudaVariant(VariantID vid);
   void runOpenMPTargetVariant(VariantID vid);
+  void runSyclVariant(VariantID vid) {};
 
 private:
   Real_type m_dx;

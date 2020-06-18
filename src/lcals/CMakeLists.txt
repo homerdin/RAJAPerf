@@ -48,6 +48,7 @@ blt_add_library(
           HYDRO_2D-Cuda.cpp
           HYDRO_2D-OMP.cpp
           HYDRO_2D-OMPTarget.cpp
+          HYDRO_2D-Sycl.cpp
           INT_PREDICT.cpp 
           INT_PREDICT-Seq.cpp 
           INT_PREDICT-Cuda.cpp 

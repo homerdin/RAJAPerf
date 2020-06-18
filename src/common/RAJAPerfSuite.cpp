@@ -38,7 +38,7 @@
 #include "lcals/INT_PREDICT.hpp"
 #include "lcals/PLANCKIAN.hpp"
 #include "lcals/TRIDIAG_ELIM.hpp"
-
+#ifdef BRIAN
 //
 // Polybench kernels...
 //
@@ -55,7 +55,7 @@
 #include "polybench/POLYBENCH_JACOBI_1D.hpp"
 #include "polybench/POLYBENCH_JACOBI_2D.hpp"
 #include "polybench/POLYBENCH_MVT.hpp"
-
+#endif
 //
 // Stream kernels...
 //
@@ -99,7 +99,7 @@ static const std::string GroupNames [] =
 {
   std::string("Basic"),
   std::string("Lcals"),
-  std::string("Polybench"),
+//  std::string("Polybench"),
   std::string("Stream"),
   std::string("Apps"),
 
@@ -151,7 +151,7 @@ static const std::string KernelNames [] =
   std::string("Lcals_INT_PREDICT"),
   std::string("Lcals_PLANCKIAN"),
   std::string("Lcals_TRIDIAG_ELIM"),
-
+#ifdef BRIAN
 //
 // Polybench kernels...
 //
@@ -168,7 +168,7 @@ static const std::string KernelNames [] =
   std::string("Polybench_JACOBI_1D"),
   std::string("Polybench_JACOBI_2D"),
   std::string("Polybench_MVT"),
-
+#endif
 //
 // Stream kernels...
 //
@@ -230,6 +230,11 @@ static const std::string VariantNames [] =
 #if defined(RAJA_ENABLE_CUDA)
   std::string("Base_CUDA"),
   std::string("RAJA_CUDA"),
+#endif
+
+#if defined(RAJA_ENABLE_SYCL)
+  std::string("Base_SYCL"),
+  std::string("RAJA_SYCL"),
 #endif
 
   std::string("Unknown Variant")  // Keep this at the end and DO NOT remove....
@@ -395,7 +400,7 @@ KernelBase* getKernelObject(KernelID kid,
        kernel = new lcals::TRIDIAG_ELIM(run_params);
        break;
     }
-
+#ifdef BRIAN
 //
 // Polybench kernels...
 //
@@ -451,7 +456,7 @@ KernelBase* getKernelObject(KernelID kid,
        kernel = new polybench::POLYBENCH_MVT(run_params);
        break;
     }
-
+#endif
 //
 // Stream kernels...
 //

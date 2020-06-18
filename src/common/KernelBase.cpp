@@ -9,10 +9,14 @@
 #include "KernelBase.hpp"
 
 #include "RunParams.hpp"
-
+#include "RAJA/RAJA.hpp"
 #include <cmath>
 
 namespace rajaperf {
+
+#if defined(RAJA_ENABLE_SYCL)
+cl::sycl::queue KernelBase::qu;
+#endif
 
 KernelBase::KernelBase(KernelID kid, const RunParams& params) 
   : run_params(params),
@@ -29,6 +33,7 @@ KernelBase::KernelBase(KernelID kid, const RunParams& params)
      tot_time[ivar] = 0.0;
      checksum[ivar] = 0.0;
   }
+
 }
 
  
@@ -55,6 +60,10 @@ Index_type KernelBase::getRunReps() const
 void KernelBase::execute(VariantID vid) 
 {
   running_variant = vid;
+
+#if defined(RAJA_ENABLE_SYCL)
+  ::RAJA::sycl::detail::setQueue(&qu);
+#endif
 
   resetTimer();
 
@@ -118,6 +127,15 @@ void KernelBase::runKernel(VariantID vid)
     case RAJA_CUDA :
     {
       runCudaVariant(vid);
+      break;
+    }
+#endif
+
+#if defined(RAJA_ENABLE_SYCL)
+    case Base_SYCL :
+    case RAJA_SYCL :
+    {
+      runSyclVariant(vid);
       break;
     }
 #endif
