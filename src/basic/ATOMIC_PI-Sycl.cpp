@@ -33,18 +33,6 @@ namespace basic
 #define ATOMIC_PI_DATA_TEARDOWN_SYCL \
   deallocSyclDeviceData(pi, qu);
 
-__global__ void atomic_pi(Real_ptr pi,
-                          Real_type dx, 
-                          Index_type iend) 
-{
-   Index_type i = blockIdx.x * blockDim.x + threadIdx.x;
-   if (i < iend) {
-     double x = (double(i) + 0.5) * dx;
-     RAJA::atomicAdd<RAJA::sycl_atomic>(pi, dx / (1.0 + x * x));
-   }
-}
-
-
 void ATOMIC_PI::runSyclVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
@@ -63,8 +51,8 @@ void ATOMIC_PI::runSyclVariant(VariantID vid)
       initSyclDeviceData(pi, &m_pi_init, 1);
  
       const size_t grid_size = block_size * RAJA_DIVIDE_CEILING_INT(iend, block_size);
-      qu.submit([&] (cl::sycl::handler h) {
 
+      qu.submit([&] (cl::sycl::handler h) {
         h.parallel_for(cl::sycl::nd_range<1>(grid_size, block_size),
                        [=] (cl::sycl::nd_item<1> item) {
 
@@ -72,10 +60,9 @@ void ATOMIC_PI::runSyclVariant(VariantID vid)
           if (i < iend) {
             RAJA::atomicAdd<RAJA::sycl_atomic>(pi, dx / (1.0 + x * x));
           }
+
         });
       });
-      atomic_pi<<<grid_size, block_size>>>( pi, dx, iend ); 
-
 
       getSyclDeviceData(m_pi, pi, 1);
       *m_pi *= 4.0;

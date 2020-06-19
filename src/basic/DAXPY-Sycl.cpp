@@ -47,30 +47,32 @@ void DAXPY::runSyclVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
-  const unsigned long iend = getRunSize();
+  const Index_type iend = getRunSize();
 
   DAXPY_DATA_SETUP;
 
   if ( vid == Base_SYCL ) {
+
     DAXPY_DATA_SETUP_SYCL;
-//    std::cout << "Start Timer: Base_SYCL" << std::endl;
+
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
-      qu.submit([&] (cl::sycl::handler& h)
-      {
-        const size_t grid_size = block_size * RAJA_DIVIDE_CEILING_INT(iend, block_size);
-        h.parallel_for<class syclDAXPY>(cl::sycl::nd_range<1>{grid_size, block_size},
-                                        [=] (cl::sycl::nd_item<1> item ) {
+
+      const size_t grid_size = block_size * RAJA_DIVIDE_CEILING_INT(iend, block_size);
+
+      qu.submit([&] (cl::sycl::handler& h) {
+        h.parallel_for<class DAXPY>(cl::sycl::nd_range<1>{grid_size, block_size},
+                                    [=] (cl::sycl::nd_item<1> item ) {
 
           Index_type i = item.get_global_id(0);
           if (i < iend) {
             DAXPY_BODY
           }
+
         });
       });
     }
     qu.wait(); // Wait for computation to finish before stopping timer
-//    std::cout << "Stop Timer: Base_SYCL" << std::endl;
     stopTimer();
 
     DAXPY_DATA_TEARDOWN_SYCL;
@@ -78,7 +80,6 @@ void DAXPY::runSyclVariant(VariantID vid)
   } else if ( vid == RAJA_SYCL ) {
 
     DAXPY_DATA_SETUP_SYCL;
-//    std::cout <<  "Start Timer: RAJA_SYCL" << std::endl;
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
@@ -89,7 +90,6 @@ void DAXPY::runSyclVariant(VariantID vid)
 
     }
     qu.wait();
-//    std::cout << "Stop Timer: RAJA_SYCL" << std::endl;
     stopTimer();
 
     DAXPY_DATA_TEARDOWN_SYCL;

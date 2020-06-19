@@ -68,56 +68,48 @@ void HYDRO_2D::runSyclVariant(VariantID vid)
   HYDRO_2D_DATA_SETUP;
 
   if ( vid == Base_SYCL ) {
-    {
-      HYDRO_2D_DATA_SETUP_SYCL;
 
-      startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
-        qu.submit([&] (cl::sycl::handler& h)
-        { 
+    HYDRO_2D_DATA_SETUP_SYCL;
 
-          h.parallel_for<class syclHydro2dBody1>(cl::sycl::range<2>(kn-2, jn-2),
-                                                 cl::sycl::id<2>{1, 1}, // offset to start a idx 1
-                                                 [=] (cl::sycl::item<2> item ) {
-            int j = item.get_id(1);
-            int k = item.get_id(0);
-//            ++j; ++k;
- 
-            HYDRO_2D_BODY1
-          });
+    startTimer();
+    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      qu.submit([&] (cl::sycl::handler& h) { 
+        h.parallel_for<class syclHydro2dBody1>(cl::sycl::range<2>(kn-2, jn-2),
+                                               cl::sycl::id<2>(1, 1), // offset to start a idx 1
+                                               [=] (cl::sycl::item<2> item ) {
+          int j = item.get_id(1);
+          int k = item.get_id(0); 
+          HYDRO_2D_BODY1
+
         });
+      });
 
-        qu.submit([&] (cl::sycl::handler& h)
-        { 
+      qu.submit([&] (cl::sycl::handler& h) { 
+        h.parallel_for<class syclHydro2dBody2>(cl::sycl::range<2>(kn-2, jn-2),
+                                               cl::sycl::id<2>(1, 1), // offset to start a idx 1
+                                               [=] (cl::sycl::item<2> item ) {
+          int j = item.get_id(1);
+          int k = item.get_id(0);
+          HYDRO_2D_BODY2
 
-          h.parallel_for<class syclHydro2dBody2>(cl::sycl::range<2>(kn-2, jn-2),
-                                                 cl::sycl::id<2>{1, 1}, // offset to start a idx 1
-                                                 [=] (cl::sycl::item<2> item ) {
-            int j = item.get_id(1);
-            int k = item.get_id(0);
-//            ++j; ++k;
-
-            HYDRO_2D_BODY2
-          });
         });
+      });
 
-        qu.submit([&] (cl::sycl::handler& h)
-        { 
+      qu.submit([&] (cl::sycl::handler& h) { 
+        h.parallel_for<class syclHydro2dBody3>(cl::sycl::range<2>(kn-2, jn-2),
+                                               cl::sycl::id<2>(1, 1), // offset to start a idx 1
+                                               [=] (cl::sycl::item<2> item ) {
+          int j = item.get_id(1);
+          int k = item.get_id(0);
+          HYDRO_2D_BODY3
 
-          h.parallel_for<class syclHydro2dBody3>(cl::sycl::range<2>(kn-2, jn-2),
-                                                 cl::sycl::id<2>{1, 1}, // offset to start a idx 1
-                                                 [=] (cl::sycl::item<2> item ) {
-            int j = item.get_id(1);
-            int k = item.get_id(0);
-//            ++j; ++k;
-
-            HYDRO_2D_BODY3
-          });
         });
-      }
-      qu.wait(); // Wait for computation to finish before stopping timer
-      stopTimer();
+      });
+
     }
+    qu.wait(); // Wait for computation to finish before stopping timer
+    stopTimer();
+
     HYDRO_2D_DATA_TEARDOWN_SYCL;
 
   } else if ( vid == RAJA_SYCL ) {

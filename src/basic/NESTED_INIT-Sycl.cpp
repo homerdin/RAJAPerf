@@ -48,32 +48,32 @@ void NESTED_INIT::runSyclVariant(VariantID vid)
   NESTED_INIT_DATA_SETUP;
 
   if ( vid == Base_SYCL ) {
-    {
-      NESTED_INIT_DATA_SETUP_SYCL;
 
-      startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
-        qu.submit([&] (cl::sycl::handler& h)
-        {
-          const size_t grid_size = block_size * RAJA_DIVIDE_CEILING_INT(ni, block_size); 
-          h.parallel_for<class syclNestedInit>(cl::sycl::nd_range<3> (
-                                                   cl::sycl::range<3> (nk, nj, grid_size),
-                                                   cl::sycl::range<3> (1, 1, block_size)),
-                                               [=] (cl::sycl::nd_item<3> item) {
+    NESTED_INIT_DATA_SETUP_SYCL;
 
-            Index_type i = item.get_global_id(2);
-            Index_type j = item.get_global_id(1);
-            Index_type k = item.get_global_id(0);
+    startTimer();
+    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-            if (i < ni) {
-              NESTED_INIT_BODY
-            }
-          });
+      const size_t grid_size = block_size * RAJA_DIVIDE_CEILING_INT(ni, block_size); 
+
+      qu.submit([&] (cl::sycl::handler& h) {
+        h.parallel_for<class NestedInit>(cl::sycl::nd_range<3> (
+                                             cl::sycl::range<3> (nk, nj, grid_size),
+                                             cl::sycl::range<3> (1, 1, block_size)),
+                                         [=] (cl::sycl::nd_item<3> item) {
+
+          Index_type i = item.get_global_id(2);
+          Index_type j = item.get_global_id(1);
+          Index_type k = item.get_global_id(0);
+
+          if (i < ni) {
+            NESTED_INIT_BODY
+          }
         });
-      }
-      qu.wait(); // Wait for computation to finish before stopping timer
-      stopTimer();
-    } // Block to trigger buffer destruction
+      });
+    }
+    qu.wait(); // Wait for computation to finish before stopping timer
+    stopTimer();
 
     NESTED_INIT_DATA_TEARDOWN_SYCL;
 

@@ -77,7 +77,7 @@ void INIT_VIEW1D::runSyclVariant(VariantID vid)
 
     INIT_VIEW1D_DATA_TEARDOWN_SYCL;
 #ifdef BRIAN
-  } else if ( false /*vid == RAJA_SYCL */ ) {
+  } else if ( vid == RAJA_SYCL ) {
 
     INIT_VIEW1D_DATA_SETUP_SYCL;
 
