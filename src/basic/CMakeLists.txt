@@ -60,7 +60,6 @@ blt_add_library(
           REDUCE3_INT-Cuda.cpp
           REDUCE3_INT-OMP.cpp
           REDUCE3_INT-OMPTarget.cpp
-          REDUCE3_INT-Sycl.cpp
           TRAP_INT.cpp
           TRAP_INT-Seq.cpp
           TRAP_INT-Cuda.cpp 

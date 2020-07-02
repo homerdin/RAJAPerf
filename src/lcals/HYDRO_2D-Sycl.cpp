@@ -74,9 +74,9 @@ void HYDRO_2D::runSyclVariant(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
       qu.submit([&] (cl::sycl::handler& h) { 
-        h.parallel_for<class syclHydro2dBody1>(cl::sycl::range<2>(kn-2, jn-2),
-                                               cl::sycl::id<2>(1, 1), // offset to start a idx 1
-                                               [=] (cl::sycl::item<2> item ) {
+        h.parallel_for<class Hydro2dBody1>(cl::sycl::range<2>(kn-2, jn-2),
+                                           cl::sycl::id<2>(1, 1), // offset to start a idx 1
+                                           [=] (cl::sycl::item<2> item ) {
           int j = item.get_id(1);
           int k = item.get_id(0); 
           HYDRO_2D_BODY1
@@ -85,9 +85,9 @@ void HYDRO_2D::runSyclVariant(VariantID vid)
       });
 
       qu.submit([&] (cl::sycl::handler& h) { 
-        h.parallel_for<class syclHydro2dBody2>(cl::sycl::range<2>(kn-2, jn-2),
-                                               cl::sycl::id<2>(1, 1), // offset to start a idx 1
-                                               [=] (cl::sycl::item<2> item ) {
+        h.parallel_for<class Hydro2dBody2>(cl::sycl::range<2>(kn-2, jn-2),
+                                           cl::sycl::id<2>(1, 1), // offset to start a idx 1
+                                           [=] (cl::sycl::item<2> item ) {
           int j = item.get_id(1);
           int k = item.get_id(0);
           HYDRO_2D_BODY2
@@ -96,9 +96,9 @@ void HYDRO_2D::runSyclVariant(VariantID vid)
       });
 
       qu.submit([&] (cl::sycl::handler& h) { 
-        h.parallel_for<class syclHydro2dBody3>(cl::sycl::range<2>(kn-2, jn-2),
-                                               cl::sycl::id<2>(1, 1), // offset to start a idx 1
-                                               [=] (cl::sycl::item<2> item ) {
+        h.parallel_for<class Hydro2dBody3>(cl::sycl::range<2>(kn-2, jn-2),
+                                           cl::sycl::id<2>(1, 1), // offset to start a idx 1
+                                           [=] (cl::sycl::item<2> item ) {
           int j = item.get_id(1);
           int k = item.get_id(0);
           HYDRO_2D_BODY3
@@ -108,53 +108,6 @@ void HYDRO_2D::runSyclVariant(VariantID vid)
 
     }
     qu.wait(); // Wait for computation to finish before stopping timer
-    stopTimer();
-
-    HYDRO_2D_DATA_TEARDOWN_SYCL;
-
-  } else if ( vid == RAJA_SYCL ) {
-
-    HYDRO_2D_DATA_SETUP_SYCL;
-
-    HYDRO_2D_VIEWS_RAJA;
-
-      using EXECPOL =
-        RAJA::KernelPolicy<
-          RAJA::statement::SyclKernel<
-            RAJA::statement::For<0, RAJA::sycl_global_1<1>,  // k
-              RAJA::statement::For<1, RAJA::sycl_global_2<256>,  // j
-                RAJA::statement::Lambda<0>
-              >
-            >
-          >
-        >;
-
-    startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
-
-      RAJA::kernel<EXECPOL>(
-        RAJA::make_tuple( RAJA::RangeSegment(kbeg, kend),
-                          RAJA::RangeSegment(jbeg, jend)),
-        [=] (Index_type k, Index_type j) {
-        HYDRO_2D_BODY1_RAJA;
-      });
-
-      RAJA::kernel<EXECPOL>(
-        RAJA::make_tuple( RAJA::RangeSegment(kbeg, kend),
-                          RAJA::RangeSegment(jbeg, jend)),
-        [=] (Index_type k, Index_type j) {
-        HYDRO_2D_BODY2_RAJA;
-      });
-
-      RAJA::kernel<EXECPOL>(
-        RAJA::make_tuple( RAJA::RangeSegment(kbeg, kend),
-                          RAJA::RangeSegment(jbeg, jend)),
-        [=] (Index_type k, Index_type j) {
-        HYDRO_2D_BODY3_RAJA;
-      });
-
-    }
-    qu.wait();
     stopTimer();
 
     HYDRO_2D_DATA_TEARDOWN_SYCL;

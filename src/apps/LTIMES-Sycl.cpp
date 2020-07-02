@@ -30,54 +30,47 @@ namespace apps
 {
 
 #define LTIMES_DATA_SETUP_SYCL \
-  cl::sycl::buffer<Real_type> d_phidat {m_phidat, m_philen}; \
-  cl::sycl::buffer<Real_type> d_elldat {m_elldat, m_elllen}; \
-  cl::sycl::buffer<Real_type> d_psidat {m_psidat, m_psilen}; \
 \
-  unsigned long num_d = m_num_d; \
-  unsigned long num_z = m_num_z; \
-  unsigned long num_g = m_num_g; \
-  unsigned long num_m = m_num_m; \
-\
-  force_allocate<cl::sycl::access::target::global_buffer>(d_phidat, qu); \
-  force_allocate<cl::sycl::access::target::global_buffer>(d_elldat, qu); \
-  force_allocate<cl::sycl::access::target::global_buffer>(d_psidat, qu);
+  allocAndInitSyclDeviceData(phidat, m_phidat, m_philen, qu); \
+  allocAndInitSyclDeviceData(elldat, m_elldat, m_elllen, qu); \
+  allocAndInitSyclDeviceData(psidat, m_psidat, m_psilen, qu);
 
-#define LTIMES_DATA_TEARDOWN_SYCL
+#define LTIMES_DATA_TEARDOWN_SYCL \
+  getSyclDeviceData(m_phidat, phidat, m_philen, qu); \
+  deallocSyclDeviceData(phidat, qu); \
+  deallocSyclDeviceData(elldat, qu); \
+  deallocSyclDeviceData(psidat, qu);
 
 void LTIMES::runSyclVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
 
+  LTIMES_DATA_SETUP;
+
   if ( vid == Base_SYCL ) {
-    {
-      LTIMES_DATA_SETUP_SYCL;
 
-      startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    LTIMES_DATA_SETUP_SYCL;
 
-        qu.submit([&] (cl::sycl::handler& h) {
+    startTimer();
+    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-          auto phidat = d_phidat.get_access<cl::sycl::access::mode::read_write>(h);
-          auto elldat = d_elldat.get_access<cl::sycl::access::mode::read>(h);
-          auto psidat = d_psidat.get_access<cl::sycl::access::mode::read>(h);
+      qu.submit([&] (cl::sycl::handler& h) {
+        h.parallel_for<class LTIMES>(cl::sycl::range<3> (num_z, num_g, num_m),
+                                     [=] (cl::sycl::item<3> item) {
 
-          h.parallel_for<class LTIMES>(cl::sycl::range<3> {num_z, num_g, num_m},
-                                       [=] (cl::sycl::item<3> item) {
+          Index_type z = item.get_id(0);
+          Index_type g = item.get_id(1);
+          Index_type m = item.get_id(2);
 
-            Index_type z = item.get_id(0);
-            Index_type g = item.get_id(1);
-            Index_type m = item.get_id(2);
+          for (Index_type d = 0; d < num_d; ++d) {
+            LTIMES_BODY
+          }
 
-            for (Index_type d = 0; d < num_d; ++d) {
-              LTIMES_BODY
-            }
-          });
         });
-      }
-      qu.wait(); // Wait for computation to finish before stopping timer      
-      stopTimer();
+      });
     }
+    qu.wait(); // Wait for computation to finish before stopping timer      
+    stopTimer();
 
     LTIMES_DATA_TEARDOWN_SYCL;
 

@@ -86,7 +86,7 @@ void POLYBENCH_MVT::runSyclVariant(VariantID vid)
           });
         });
       }
-
+      qu.wait();
       stopTimer();
     }
 

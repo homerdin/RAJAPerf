@@ -73,7 +73,7 @@ void POLYBENCH_FLOYD_WARSHALL::runSyclVariant(VariantID vid)
           });
         }
       }
-
+      qu.wait();
       stopTimer();
     } // buffer scope
 

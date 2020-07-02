@@ -123,7 +123,7 @@ void POLYBENCH_GEMVER::runSyclVariant(VariantID vid)
           });
         });
       }
-
+      qu.wait();
       stopTimer();
     }
 

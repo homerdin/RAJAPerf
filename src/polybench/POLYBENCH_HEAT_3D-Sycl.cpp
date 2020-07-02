@@ -88,7 +88,7 @@ void POLYBENCH_HEAT_3D::runSyclVariant(VariantID vid)
           });
         }
       }
-
+      qu.wait();
       stopTimer();
     }
 

@@ -73,7 +73,7 @@ void POLYBENCH_GESUMMV::runSyclVariant(VariantID vid)
           });
         });
       }
-
+      qu.wait();
       stopTimer();
     }
 

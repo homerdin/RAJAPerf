@@ -29,7 +29,6 @@ cmake \
   -DENABLE_CUDA=Off \
   -DENABLE_TARGET_OPENMP=Off \
   -DENABLE_ALL_WARNINGS=Off \
-  -DENABLE_NO_LIBS=On \
   -DENABLE_SYCL=On \
   -DCMAKE_LINKER=clang++ \
   "$@" \

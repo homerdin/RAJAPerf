@@ -82,7 +82,7 @@ void POLYBENCH_JACOBI_1D::runSyclVariant(VariantID vid)
           });
         }
       }
-
+      qu.wait();
       stopTimer();
     }
 

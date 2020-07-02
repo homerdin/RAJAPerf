@@ -113,7 +113,7 @@ void POLYBENCH_FDTD_2D::runSyclVariant(VariantID vid)
         } // tstep loop
 
       } // run_reps
-
+      qu.wait();
       stopTimer();
     } // Buffer scope
 

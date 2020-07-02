@@ -85,7 +85,7 @@ void POLYBENCH_ATAX::runSyclVariant(VariantID vid)
           });
         }); 
       }
-    
+      qu.wait(); 
       stopTimer();
     }
 

@@ -21,12 +21,6 @@ namespace rajaperf
 namespace lcals
 {
 
-  //
-  // Define thread block size for SYCL execution
-  //
-  const size_t block_size = 256;
-
-
 #define TRIDIAG_ELIM_DATA_SETUP_SYCL \
   allocAndInitSyclDeviceData(xout, m_xout, m_N, qu); \
   allocAndInitSyclDeviceData(xin, m_xin, m_N, qu); \
@@ -55,36 +49,15 @@ void TRIDIAG_ELIM::runSyclVariant(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-      const size_t grid_size = block_size * RAJA_DIVIDE_CEILING_INT(iend, block_size);
       qu.submit([&] (cl::sycl::handler& h) {
-        h.parallel_for<class TridiagElim>(cl::sycl::nd_range<1>(grid_size, block_size),
-                                          [=] (cl::sycl::nd_item<1> item) {
+        h.parallel_for<class TridiagElim>(cl::sycl::range<1>(iend),
+                                          cl::sycl::id<1> (ibegin),
+                                          [=] (cl::sycl::item<1> i) {
 
-          Index_type i = item.get_global_id(0);
-          if (i > 0 && i < iend) {
-            TRIDIAG_ELIM_BODY;
-          }
+          TRIDIAG_ELIM_BODY;
 
         });
       });
-    }
-    qu.wait();
-    stopTimer();
-
-    TRIDIAG_ELIM_DATA_TEARDOWN_SYCL;
-
-  } else if ( vid == RAJA_SYCL ) {
-
-    TRIDIAG_ELIM_DATA_SETUP_SYCL;
-
-    startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
-
-       RAJA::forall< RAJA::sycl_exec<block_size, true /*async*/> >(
-         RAJA::RangeSegment(ibegin, iend), [=] (Index_type i) {
-         TRIDIAG_ELIM_BODY;
-       });
-
     }
     qu.wait();
     stopTimer();

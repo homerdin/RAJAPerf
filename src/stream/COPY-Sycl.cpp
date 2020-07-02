@@ -65,7 +65,7 @@ void COPY::runSyclVariant(VariantID vid)
           });
         });
       }
-
+      qu.wait();
       stopTimer();
     } // Buffer Destruction
 

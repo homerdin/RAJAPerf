@@ -65,14 +65,15 @@ void POLYBENCH_GEMM::runSyclVariant(VariantID vid)
             Index_type j = item.get_id(1);
 
             POLYBENCH_GEMM_BODY1;
+            POLYBENCH_GEMM_BODY2;
             for (Index_type k = 0; k < nk; ++k ) {
-               POLYBENCH_GEMM_BODY2;
+               POLYBENCH_GEMM_BODY3;
             }
-            POLYBENCH_GEMM_BODY3;
+            POLYBENCH_GEMM_BODY4;
           });
         });
       }
-
+      qu.wait();
       stopTimer();
     } // buffer scope
 

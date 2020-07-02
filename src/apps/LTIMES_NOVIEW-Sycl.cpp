@@ -55,14 +55,12 @@ void LTIMES_NOVIEW::runSyclVariant(VariantID vid)
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
       qu.submit([&] (cl::sycl::handler& h) {
-        h.parallel_for<class LTIMES_NOVIEW>(cl::sycl::nd_range<3> (
-                                              cl::sycl::range<3>(num_m, num_g, num_z),
-                                              cl::sycl::range<3>(num_m, num_g, 1)),
-                                            [=] (cl::sycl::nd_item<3> item) {
+        h.parallel_for<class LTIMES_NOVIEW>(cl::sycl::range<3>(num_m, num_g, num_z),
+                                            [=] (cl::sycl::item<3> item) {
 
-          Index_type z = item.get_global_id(2);
-          Index_type g = item.get_global_id(1);
-          Index_type m = item.get_global_id(0);
+          Index_type m = item.get_id(0);
+          Index_type g = item.get_id(1);
+          Index_type z = item.get_id(2);
 
           for (Index_type d = 0; d < num_d; ++d) {
             LTIMES_NOVIEW_BODY
@@ -72,42 +70,6 @@ void LTIMES_NOVIEW::runSyclVariant(VariantID vid)
       });
     }
     qu.wait(); // Wait for computation to finish before stopping timer      
-    stopTimer();
-
-    LTIMES_NOVIEW_DATA_TEARDOWN_SYCL;
-
-  } else if ( vid == RAJA_SYCL ) {
-
-    LTIMES_NOVIEW_DATA_SETUP_SYCL;
-
-    using EXEC_POL =
-      RAJA::KernelPolicy<
-        RAJA::statement::SyclKernel<
-          RAJA::statement::For<1, RAJA::sycl_group_3_loop,      //z
-            RAJA::statement::For<2, RAJA::sycl_local_2_loop,    //g
-              RAJA::statement::For<3, RAJA::sycl_local_1_loop, //m
-                RAJA::statement::For<0, RAJA::seq_exec,       //d
-                  RAJA::statement::Lambda<0>
-                >
-              >
-            >
-          >
-        >
-      >;
-
-    startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
-
-      RAJA::kernel<EXEC_POL>( RAJA::make_tuple(RAJA::RangeSegment(0, num_d),
-                                               RAJA::RangeSegment(0, num_z),
-                                               RAJA::RangeSegment(0, num_g),
-                                               RAJA::RangeSegment(0, num_m)),
-        [=] (Index_type d, Index_type z, Index_type g, Index_type m) {
-        LTIMES_NOVIEW_BODY;
-      });
-
-    }
-    qu.wait();
     stopTimer();
 
     LTIMES_NOVIEW_DATA_TEARDOWN_SYCL;

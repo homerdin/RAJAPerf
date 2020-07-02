@@ -57,8 +57,6 @@ void POLYBENCH_ADI::runSyclVariant(VariantID vid)
       startTimer();
       for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-       POLYBENCH_ADI_BODY1;
-
         for (Index_type t = 1; t <= tsteps; ++t) {
           qu.submit([&] (cl::sycl::handler& h)
           {
@@ -107,7 +105,8 @@ void POLYBENCH_ADI::runSyclVariant(VariantID vid)
           });
         }  // tstep loop
       }
-      stopTimer();
+     qu.wait();
+     stopTimer();
     } // Trigger buffer destruction
 
     POLYBENCH_ADI_TEARDOWN_SYCL;

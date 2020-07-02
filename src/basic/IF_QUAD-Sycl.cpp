@@ -29,12 +29,6 @@ namespace rajaperf
 namespace basic
 {
 
-  //
-  // Define thread block size for SYCL execution
-  //
-  const size_t block_size = 128;
-
-
 #define IF_QUAD_DATA_SETUP_SYCL \
   allocAndInitSyclDeviceData(a, m_a, iend, qu); \
   allocAndInitSyclDeviceData(b, m_b, iend, qu); \
@@ -55,10 +49,10 @@ void IF_QUAD::runSyclVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
-  const unsigned long iend = getRunSize();
+  const Index_type iend = getRunSize();
 
   IF_QUAD_DATA_SETUP;
-  using cl::sycl::sqrt;
+//  using cl::sycl::sqrt;
 
   if ( vid == Base_SYCL ) {
 
@@ -67,40 +61,17 @@ void IF_QUAD::runSyclVariant(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-      const size_t grid_size = block_size * RAJA_DIVIDE_CEILING_INT(iend, block_size);
-
       qu.submit([&] (cl::sycl::handler& h) {
-        h.parallel_for<class IfQuad>(cl::sycl::nd_range<1>(grid_size, block_size),
-                                     [=] (cl::sycl::nd_item<1> item ) {
+        h.parallel_for<class IfQuad>(cl::sycl::range<1>(iend),
+                                     [=] (cl::sycl::item<1> item) {
 
-          Index_type i = item.get_global_id(0);
+          Index_type i = item.get_id(0);
+          IF_QUAD_BODY
 
-          if (i < iend) {
-            IF_QUAD_BODY
-          }
         });
       });
     }
     qu.wait(); // Wait for computation to finish before stopping timer
-    stopTimer();
-
-    IF_QUAD_DATA_TEARDOWN_SYCL;
-
-  } else if ( vid == RAJA_SYCL ) {
-
-    IF_QUAD_DATA_SETUP_SYCL;
-
-    startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
-
-       RAJA::forall< RAJA::sycl_exec<block_size, true> >(
-         RAJA::RangeSegment(ibegin, iend), [=] (Index_type i) {
-         using cl::sycl::sqrt;
-         IF_QUAD_BODY;
-       });
-
-    }
-    qu.wait();
     stopTimer();
 
     IF_QUAD_DATA_TEARDOWN_SYCL;

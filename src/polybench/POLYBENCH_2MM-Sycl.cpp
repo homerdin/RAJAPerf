@@ -111,6 +111,7 @@ void POLYBENCH_2MM::runSyclVariant(VariantID vid)
           });
         });
       }
+      qu.wait();
       stopTimer();
     }
 

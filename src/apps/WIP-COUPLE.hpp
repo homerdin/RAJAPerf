@@ -172,6 +172,7 @@ public:
   void runOpenMPVariant(VariantID vid) {(void) vid;}
   void runCudaVariant(VariantID vid) {(void) vid;}
   void runOpenMPTargetVariant(VariantID vid) {(void) vid;}
+  void runSyclVariant(VariantID vid) {};
 
 private:
   Complex_ptr m_t0;

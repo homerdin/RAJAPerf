@@ -105,28 +105,6 @@ void FIRST_MIN::runSyclVariant(VariantID vid)
 
     FIRST_MIN_DATA_TEARDOWN_SYCL;
 
-  } else if ( vid == RAJA_SYCL ) {
-
-    FIRST_MIN_DATA_SETUP_SYCL;
-
-    startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
-
-       RAJA::ReduceMinLoc<RAJA::sycl_reduce, Real_type, Index_type> loc(
-                                                        m_xmin_init, m_initloc);
-
-       RAJA::forall< RAJA::sycl_exec<block_size, true /*async*/> >(
-         RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i) {
-         FIRST_MIN_BODY_RAJA;
-       });
-
-       m_minloc = RAJA_MAX(m_minloc, loc.getLoc());
-
-    }
-    stopTimer();
-
-    FIRST_MIN_DATA_TEARDOWN_SYCL;
-
   } else {
      std::cout << "\n  FIRST_MIN : Unknown Sycl variant id = " << vid << std::endl;
   }

@@ -84,29 +84,6 @@ void GEN_LIN_RECUR::runSyclVariant(VariantID vid)
 
     GEN_LIN_RECUR_DATA_TEARDOWN_SYCL;
 
-  } else if ( vid == RAJA_SYCL ) {
-
-    GEN_LIN_RECUR_DATA_SETUP_SYCL;
-
-    startTimer();
-    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
-
-       RAJA::forall< RAJA::sycl_exec<block_size, true /*async*/> >(
-         RAJA::RangeSegment(0, N), [=] (Index_type k) {
-         GEN_LIN_RECUR_BODY1;
-       });
-
-       RAJA::forall< RAJA::sycl_exec<block_size, true /*async*/> >(
-         RAJA::RangeSegment(1, N+1), [=] (Index_type i) {
-         GEN_LIN_RECUR_BODY2;
-       });
-
-    }
-    qu.wait();
-    stopTimer();
-
-    GEN_LIN_RECUR_DATA_TEARDOWN_SYCL;
-
   } else {
      std::cout << "\n  GEN_LIN_RECUR : Unknown Sycl variant id = " << vid << std::endl;
   }

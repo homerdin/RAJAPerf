@@ -67,7 +67,7 @@ void ADD::runSyclVariant(VariantID vid)
           });
         });
       }
-
+      qu.wait();
       stopTimer();
     }
 

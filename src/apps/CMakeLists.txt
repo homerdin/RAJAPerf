@@ -32,6 +32,7 @@ blt_add_library(
           LTIMES-Cuda.cpp
           LTIMES-OMP.cpp
           LTIMES-OMPTarget.cpp
+          LTIMES-Sycl.cpp
           LTIMES_NOVIEW.cpp
           LTIMES_NOVIEW-Seq.cpp
           LTIMES_NOVIEW-Cuda.cpp

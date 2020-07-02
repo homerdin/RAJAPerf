@@ -71,7 +71,7 @@ void TRIAD::runSyclVariant(VariantID vid)
           });
         });
       }
-
+      qu.wait();
       stopTimer();
     }
 

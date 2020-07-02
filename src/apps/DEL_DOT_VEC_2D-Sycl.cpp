@@ -31,12 +31,6 @@ namespace rajaperf
 namespace apps
 {
 
-  //
-  // Define thread block size for SYCL execution
-  //
-  const size_t block_size = 256;
-
-
 #define DEL_DOT_VEC_2D_DATA_SETUP_SYCL \
   allocAndInitSyclDeviceData(x, m_x, m_array_length, qu); \
   allocAndInitSyclDeviceData(y, m_y, m_array_length, qu); \
@@ -73,17 +67,13 @@ void DEL_DOT_VEC_2D::runSyclVariant(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-      const size_t grid_size = block_size * RAJA_DIVIDE_CEILING_INT(iend, block_size);
-
       qu.submit([&] (cl::sycl::handler& h) {
-        h.parallel_for<class DelDotVec>(cl::sycl::nd_range<1> (grid_size, block_size),
-                                        [=] (cl::sycl::nd_item<1> item) {
+        h.parallel_for<class DelDotVec>(cl::sycl::range<1> (iend),
+                                        [=] (cl::sycl::item<1> item) {
 
-          Index_type ii = item.get_global_id(0);
-          if (ii < iend) {
-            DEL_DOT_VEC_2D_BODY_INDEX
-            DEL_DOT_VEC_2D_BODY
-          }
+          Index_type ii = item.get_id(0);
+          DEL_DOT_VEC_2D_BODY_INDEX
+          DEL_DOT_VEC_2D_BODY
 
         });
       });
