@@ -14,6 +14,10 @@
 
 namespace rajaperf {
 
+#if defined(RAJA_ENABLE_SYCL)
+cl::sycl::queue KernelBase::qu;
+#endif
+
 KernelBase::KernelBase(KernelID kid, const RunParams& params) 
   : run_params(params),
     kernel_id(kid),
@@ -118,6 +122,14 @@ void KernelBase::runKernel(VariantID vid)
     case RAJA_CUDA :
     {
       runCudaVariant(vid);
+      break;
+    }
+#endif
+
+#if defined(RAJA_ENABLE_SYCL)
+    case Base_SYCL :
+    {
+      runSyclVariant(vid);
       break;
     }
 #endif

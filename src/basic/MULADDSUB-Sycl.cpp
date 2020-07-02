@@ -29,15 +29,13 @@ namespace rajaperf
 namespace basic
 {
 
+  //
+  // Define thread block size for SYCL execution
+  //
+  const size_t block_size = 256;
+
+
 #define MULADDSUB_DATA_SETUP_SYCL \
-  const size_t block_size = qu.get_device().get_info<cl::sycl::info::device::max_work_group_size>(); \
-\
-  Real_ptr out1; \
-  Real_ptr out2; \
-  Real_ptr out3; \
-  Real_ptr in1; \
-  Real_ptr in2; \
-\
   allocAndInitSyclDeviceData(out1, m_out1, iend, qu); \
   allocAndInitSyclDeviceData(out2, m_out2, iend, qu); \
   allocAndInitSyclDeviceData(out3, m_out3, iend, qu); \
@@ -54,33 +52,54 @@ namespace basic
   deallocSyclDeviceData(in1, qu); \
   deallocSyclDeviceData(in2, qu);
 
-
 void MULADDSUB::runSyclVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
   const unsigned long iend = getRunSize();
 
+  MULADDSUB_DATA_SETUP;
+
   if ( vid == Base_SYCL ) {
+
     MULADDSUB_DATA_SETUP_SYCL;
 
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
-      qu.submit([&] (cl::sycl::handler& h)
-      {
-        const size_t grid_size = block_size * RAJA_DIVIDE_CEILING_INT(iend, block_size);
 
-        h.parallel_for(cl::sycl::nd_range<1>{grid_size, block_size},
-                       [=] (cl::sycl::nd_item<1> item) {
+      const size_t grid_size = block_size * RAJA_DIVIDE_CEILING_INT(iend, block_size);
+
+      qu.submit([&] (cl::sycl::handler& h) {
+        h.parallel_for<class MulAddSub>(cl::sycl::nd_range<1>(grid_size, block_size),
+                                        [=] (cl::sycl::nd_item<1> item) {
 
           Index_type i = item.get_global_id(0);
           if (i < iend) {
             MULADDSUB_BODY
           }
+
         });
       });
     }
-    qu.wait(); // Wait for computation to finish before stoping timer
+    qu.wait(); // Wait for computation to finish before stopping timer
+    stopTimer();
+
+    MULADDSUB_DATA_TEARDOWN_SYCL;
+
+  } else if ( vid == RAJA_SYCL ) {
+
+    MULADDSUB_DATA_SETUP_SYCL;
+
+    startTimer();
+    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+
+       RAJA::forall< RAJA::sycl_exec<block_size, true /*async*/> >(
+         RAJA::RangeSegment(ibegin, iend), [=] (Index_type i) {
+         MULADDSUB_BODY;
+       });
+
+    }
+    qu.wait();
     stopTimer();
 
     MULADDSUB_DATA_TEARDOWN_SYCL;

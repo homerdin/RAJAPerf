@@ -29,14 +29,12 @@ namespace rajaperf
 namespace basic
 {
 
+  //
+  // Define thread block size for SYCL execution
+  //
+  const size_t block_size = 256;
+
 #define NESTED_INIT_DATA_SETUP_SYCL \
-  const size_t block_size = qu.get_device().get_info<cl::sycl::info::device::max_work_group_size>(); \
-\
-  Real_ptr array; \
-  unsigned long ni = m_ni; \
-  unsigned long nj = m_nj; \
-  unsigned long nk = m_nk; \
-\
   allocAndInitSyclDeviceData(array, m_array, m_array_length, qu);
 
 #define NESTED_INIT_DATA_TEARDOWN_SYCL \
@@ -47,26 +45,68 @@ void NESTED_INIT::runSyclVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
 
+  NESTED_INIT_DATA_SETUP;
+
   if ( vid == Base_SYCL ) {
+
     NESTED_INIT_DATA_SETUP_SYCL;
 
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
-      qu.submit([&] (cl::sycl::handler& h)
-      {
-        h.parallel_for(cl::sycl::range<3> {nk, nj, ni},  
-                       [=] (cl::sycl::item<3> item) {
 
-          Index_type i = item.get_id(2);
-          Index_type j = item.get_id(1);
-          Index_type k = item.get_id(0);
+      const size_t grid_size = block_size * RAJA_DIVIDE_CEILING_INT(ni, block_size); 
 
-          NESTED_INIT_BODY
+      qu.submit([&] (cl::sycl::handler& h) {
+        h.parallel_for<class NestedInit>(cl::sycl::nd_range<3> (
+                                             cl::sycl::range<3> (nk, nj, grid_size),
+                                             cl::sycl::range<3> (1, 1, block_size)),
+                                         [=] (cl::sycl::nd_item<3> item) {
 
+          Index_type i = item.get_global_id(2);
+          Index_type j = item.get_global_id(1);
+          Index_type k = item.get_global_id(0);
+
+          if (i < ni) {
+            NESTED_INIT_BODY
+          }
         });
       });
     }
-    qu.wait(); // Wait for computation to finish before stoping timer
+    qu.wait(); // Wait for computation to finish before stopping timer
+    stopTimer();
+
+    NESTED_INIT_DATA_TEARDOWN_SYCL;
+
+  } else if ( vid == RAJA_SYCL ) {
+
+    NESTED_INIT_DATA_SETUP_SYCL;
+
+    using EXEC_POL =
+      RAJA::KernelPolicy<
+        RAJA::statement::SyclKernel<
+          RAJA::statement::For<2, RAJA::sycl_global_3<1>,      // k
+            RAJA::statement::For<1, RAJA::sycl_global_2<1>,    // j
+              RAJA::statement::For<0, RAJA::sycl_global_1<256>, // i
+                RAJA::statement::Lambda<0>
+              >
+            >
+          >
+        >
+      >;
+
+
+    startTimer();
+    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+
+      RAJA::kernel<EXEC_POL>( RAJA::make_tuple(RAJA::RangeSegment(0, ni),
+                                               RAJA::RangeSegment(0, nj),
+                                               RAJA::RangeSegment(0, nk)),
+        [=] (Index_type i, Index_type j, Index_type k) {
+        NESTED_INIT_BODY;
+      });
+
+    }
+    qu.wait();
     stopTimer();
 
     NESTED_INIT_DATA_TEARDOWN_SYCL;

@@ -29,12 +29,13 @@ namespace rajaperf
 namespace basic
 {
 
+  //
+  // Define thread block size for SYCL execution
+  //
+  const size_t block_size = 256;
+
+
 #define INIT_VIEW1D_OFFSET_DATA_SETUP_SYCL \
-  const size_t block_size = qu.get_device().get_info<cl::sycl::info::device::max_work_group_size>(); \
-\
-  Real_ptr a; \
-  const Real_type v = m_val; \
-\
   allocAndInitSyclDeviceData(a, m_a, iend, qu);
 
 #define INIT_VIEW1D_OFFSET_DATA_TEARDOWN_SYCL \
@@ -45,35 +46,59 @@ void INIT_VIEW1D_OFFSET::runSyclVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 1;
-  const unsigned long iend = getRunSize()+1;
+  const Index_type iend = getRunSize()+1;
+
+  INIT_VIEW1D_OFFSET_DATA_SETUP;
 
   if ( vid == Base_SYCL ) {
+    {
+      INIT_VIEW1D_OFFSET_DATA_SETUP_SYCL;
+
+      startTimer();
+      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+        qu.submit([&] (cl::sycl::handler& h)
+        {
+          const size_t grid_size = block_size * RAJA_DIVIDE_CEILING_INT(iend, block_size);
+
+          h.parallel_for<class syclInit3_View1d_Offset>(cl::sycl::nd_range<1>{grid_size, block_size},
+                                          [=] (cl::sycl::nd_item<1> item ) {
+
+            Index_type i = item.get_group(0) * item.get_local_range(0) + item.get_local_id(0);
+            i++;
+
+            if (i < iend) {
+              INIT_VIEW1D_OFFSET_BODY
+            }
+          });
+        });
+
+      }
+      qu.wait(); // Wait for computation to finish before stopping timer
+      stopTimer();
+    }
+
+    INIT_VIEW1D_OFFSET_DATA_TEARDOWN_SYCL;
+#ifdef BRIAN_VIEW
+  } else if ( vid == RAJA_SYCL ) {
+
     INIT_VIEW1D_OFFSET_DATA_SETUP_SYCL;
+
+    INIT_VIEW1D_OFFSET_VIEW_RAJA;
 
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
-      qu.submit([&] (cl::sycl::handler& h)
-      {
-        const size_t grid_size = block_size * RAJA_DIVIDE_CEILING_INT(iend, block_size);
 
-        h.parallel_for(cl::sycl::nd_range<1>{grid_size, block_size},
-                       [=] (cl::sycl::nd_item<1> item ) {
-
-          Index_type i = item.get_global_id(0);
-          i++;
-
-          if (i < iend) {
-            INIT_VIEW1D_OFFSET_BODY
-          }
-        });
+      RAJA::forall< RAJA::sycl_exec<block_size, true /*async*/> >(
+        RAJA::RangeSegment(ibegin, iend), [=] (Index_type i) {
+        INIT_VIEW1D_OFFSET_BODY_RAJA;
       });
 
     }
-    qu.wait(); // Wait for computation to finish before stoping timer
+    qu.wait();
     stopTimer();
 
     INIT_VIEW1D_OFFSET_DATA_TEARDOWN_SYCL;
-
+#endif
   } else {
      std::cout << "\n  INIT_VIEW1D_OFFSET : Unknown Sycl variant id = " << vid << std::endl;
   }

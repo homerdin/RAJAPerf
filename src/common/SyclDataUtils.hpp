@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-19, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-20, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/COPYRIGHT file for details.
 //
@@ -19,7 +19,7 @@
 #if defined(RAJA_ENABLE_SYCL)
 
 
-//#include "RAJA/policy/cuda/raja_cudaerrchk.hpp"
+#include <CL/sycl.hpp>
 
 
 namespace rajaperf
@@ -32,9 +32,10 @@ namespace rajaperf
  * and of propoer size for copy operation to succeed.
  */
 template <typename T>
-void initSyclDeviceData(T& dptr, const T hptr, int len, cl::sycl::queue q)
+void initSyclDeviceData(T& dptr, const T hptr, int len, cl::sycl::queue qu)
 {
-  auto e = q.memcpy(dptr, hptr, len * sizeof(typename std::remove_pointer<T>::type));
+  auto e = qu.memcpy( dptr, hptr,
+                      len * sizeof(typename std::remove_pointer<T>::type));
   e.wait();
 
   incDataInitCount();
@@ -45,11 +46,11 @@ void initSyclDeviceData(T& dptr, const T hptr, int len, cl::sycl::queue q)
  * data to device array.
  */
 template <typename T>
-void allocAndInitSyclDeviceData(T& dptr, const T hptr, int len, cl::sycl::queue q)
+void allocAndInitSyclDeviceData(T& dptr, const T hptr, int len, cl::sycl::queue qu)
 {
-  dptr = (T) cl::sycl::malloc_device(len * sizeof(typename std::remove_pointer<T>::type), q);
+  dptr = cl::sycl::malloc_device<typename std::remove_pointer<T>::type>(len, qu);
 
-  initSyclDeviceData(dptr, hptr, len, q);
+  initSyclDeviceData(dptr, hptr, len, qu);
 }
 
 /*!
@@ -59,9 +60,10 @@ void allocAndInitSyclDeviceData(T& dptr, const T hptr, int len, cl::sycl::queue 
  * and of propoer size for copy operation to succeed.
  */
 template <typename T>
-void getSyclDeviceData(T& hptr, const T dptr, int len, cl::sycl::queue q)
+void getSyclDeviceData(T& hptr, const T dptr, int len, cl::sycl::queue qu)
 {
-  auto e = q.memcpy(hptr, dptr, len * sizeof(typename std::remove_pointer<T>::type));
+  auto e = qu.memcpy( hptr, dptr,
+                      len * sizeof(typename std::remove_pointer<T>::type));
   e.wait();
 }
 
@@ -69,9 +71,9 @@ void getSyclDeviceData(T& hptr, const T dptr, int len, cl::sycl::queue q)
  * \brief Free device data array.
  */
 template <typename T>
-void deallocSyclDeviceData(T& dptr, cl::sycl::queue q)
+void deallocSyclDeviceData(T& dptr, cl::sycl::queue qu)
 {
-  cl::sycl::free(dptr, q);
+  cl::sycl::free(dptr, qu);
   dptr = 0;
 }
 

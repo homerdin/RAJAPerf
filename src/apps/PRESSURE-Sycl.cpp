@@ -22,82 +22,108 @@
 #include <iostream>
 
 #include <CL/sycl.hpp>
+#include "common/SyclDataUtils.hpp"
 
 namespace rajaperf 
 {
 namespace apps
 {
 
-#define PRESSURE_DATA_SETUP_SYCL \
-  const size_t block_size = qu.get_device().get_info<cl::sycl::info::device::max_work_group_size>(); \
-\
-  cl::sycl::buffer<Real_type> d_compression {m_compression, iend}; \
-  cl::sycl::buffer<Real_type> d_bvc {m_bvc, iend}; \
-  cl::sycl::buffer<Real_type> d_p_new {m_p_new, iend}; \
-  cl::sycl::buffer<Real_type> d_e_old {m_e_old, iend}; \
-  cl::sycl::buffer<Real_type> d_vnewc {m_vnewc, iend}; \
-\
-  const Real_type cls = m_cls; \
-  const Real_type p_cut = m_p_cut; \
-  const Real_type pmin = m_pmin; \
-  const Real_type eosvmax = m_eosvmax; \
+  //
+  // Define thread block size for SYCL execution
+  //
+  const size_t block_size = 256;
 
-#define PRESSURE_DATA_TEARDOWN_SYCL
+
+#define PRESSURE_DATA_SETUP_SYCL \
+  allocAndInitSyclDeviceData(compression, m_compression, iend, qu); \
+  allocAndInitSyclDeviceData(bvc, m_bvc, iend, qu); \
+  allocAndInitSyclDeviceData(p_new, m_p_new, iend, qu); \
+  allocAndInitSyclDeviceData(e_old, m_e_old, iend, qu); \
+  allocAndInitSyclDeviceData(vnewc, m_vnewc, iend, qu);
+
+#define PRESSURE_DATA_TEARDOWN_SYCL \
+  getSyclDeviceData(m_p_new, p_new, iend, qu); \
+  deallocSyclDeviceData(compression, qu); \
+  deallocSyclDeviceData(bvc, qu); \
+  deallocSyclDeviceData(p_new, qu); \
+  deallocSyclDeviceData(e_old, qu); \
+  deallocSyclDeviceData(vnewc, qu);
 
 void PRESSURE::runSyclVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
-  const unsigned int ibegin = 0;
-  const unsigned int iend = getRunSize();
+  const Index_type ibegin = 0;
+  const Index_type iend = getRunSize();
+
+  PRESSURE_DATA_SETUP;
+  using cl::sycl::fabs;
 
   if ( vid == Base_SYCL ) {
-    {
-      PRESSURE_DATA_SETUP_SYCL;
+
+    PRESSURE_DATA_SETUP_SYCL;
+
+    startTimer();
+    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
       const size_t grid_size = block_size * RAJA_DIVIDE_CEILING_INT(iend, block_size);
 
-      using cl::sycl::fabs;
+      qu.submit([&] (cl::sycl::handler& h) {
+        h.parallel_for<class PRESSURE_1>(cl::sycl::nd_range<1> (grid_size, block_size),
+                                         [=] (cl::sycl::nd_item<1> item) {
 
-      startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+          Index_type i = item.get_global_id(0);
+          if (i < iend) {
+            PRESSURE_BODY1
+          }
 
-        qu.submit([&] (cl::sycl::handler& h) {
-
-          auto compression = d_compression.get_access<cl::sycl::access::mode::read>(h);
-          auto bvc = d_bvc.get_access<cl::sycl::access::mode::write>(h);
-
-          h.parallel_for<class PRESSURE_1>(cl::sycl::nd_range<1> {grid_size, block_size},
-                                           [=] (cl::sycl::nd_item<1> item) {
-
-            Index_type i = item.get_group(0) * item.get_local_range(0) + item.get_local_id(0);
-
-            if (i < iend) {
-              PRESSURE_BODY1
-            }
-          });
         });
+      });
 
-        qu.submit([&] (cl::sycl::handler& h) {
+      qu.submit([&] (cl::sycl::handler& h) {
+        h.parallel_for<class PRESSURE_2>(cl::sycl::nd_range<1> (grid_size, block_size),
+                                        [=] (cl::sycl::nd_item<1> item) {
 
-          auto p_new = d_p_new.get_access<cl::sycl::access::mode::write>(h);
-          auto bvc = d_bvc.get_access<cl::sycl::access::mode::read>(h);
-          auto e_old = d_e_old.get_access<cl::sycl::access::mode::read>(h);
-          auto vnewc = d_vnewc.get_access<cl::sycl::access::mode::read>(h);
+          Index_type i = item.get_global_id(0);
+          if (i < iend) {
+            PRESSURE_BODY2
+          }
 
-          h.parallel_for<class PRESSURE_2>(cl::sycl::nd_range<1> {grid_size, block_size},
-                                          [=] (cl::sycl::nd_item<1> item) {
-
-            Index_type i = item.get_group(0) * item.get_local_range(0) + item.get_local_id(0);
-
-            if (i < iend) {
-              PRESSURE_BODY2
-            }
-          });
         });
-      }
+      });
 
-      stopTimer();
     }
+    qu.wait(); // Wait for computation to finish before stopping timer
+    stopTimer();
+
+    PRESSURE_DATA_TEARDOWN_SYCL;
+
+  } else if ( vid == RAJA_SYCL ) {
+
+    PRESSURE_DATA_SETUP_SYCL;
+
+    const bool async = true;
+
+    startTimer();
+    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+
+      RAJA::region<RAJA::seq_region>( [=]() {
+
+        RAJA::forall< RAJA::sycl_exec<block_size, async> >(
+          RAJA::RangeSegment(ibegin, iend), [=] (Index_type i) {
+          PRESSURE_BODY1;
+        });
+
+        RAJA::forall< RAJA::sycl_exec<block_size, async> >(
+          RAJA::RangeSegment(ibegin, iend), [=] (Index_type i) {
+          PRESSURE_BODY2;
+        });
+
+      }); // end sequential region (for single-source code)
+
+    }
+    qu.wait();
+    stopTimer();
 
     PRESSURE_DATA_TEARDOWN_SYCL;
 

@@ -24,87 +24,73 @@
 #include <iostream>
 
 #include <CL/sycl.hpp>
+#include "common/SyclDataUtils.hpp"
 
 namespace rajaperf 
 {
 namespace apps
 {
 
-#define DEL_DOT_VEC_2D_DATA_SETUP_SYCL \
-  const size_t block_size = qu.get_device().get_info<cl::sycl::info::device::max_work_group_size>(); \
-\
-  cl::sycl::buffer<Real_type> d_div {m_div, m_array_length}; \
-  cl::sycl::buffer<Index_type> d_real_zones {m_domain->real_zones, iend}; \
-  cl::sycl::buffer<Real_type> d_x {m_x, m_array_length}; \
-  cl::sycl::buffer<Real_type> d_y {m_y, m_array_length}; \
-  cl::sycl::buffer<Real_type> d_xdot {m_xdot, m_array_length}; \
-  cl::sycl::buffer<Real_type> d_ydot {m_ydot, m_array_length}; \
-\
-  const Real_type ptiny = m_ptiny; \
-  const Real_type half = m_half; \
+  //
+  // Define thread block size for SYCL execution
+  //
+  const size_t block_size = 256;
 
-#define DEL_DOT_VEC_2D_DATA_TEARDOWN_SYCL
+
+#define DEL_DOT_VEC_2D_DATA_SETUP_SYCL \
+  allocAndInitSyclDeviceData(x, m_x, m_array_length, qu); \
+  allocAndInitSyclDeviceData(y, m_y, m_array_length, qu); \
+  allocAndInitSyclDeviceData(xdot, m_xdot, m_array_length, qu); \
+  allocAndInitSyclDeviceData(ydot, m_ydot, m_array_length, qu); \
+  allocAndInitSyclDeviceData(div, m_div, m_array_length, qu); \
+  allocAndInitSyclDeviceData(real_zones, m_domain->real_zones, iend, qu);
+
+#define DEL_DOT_VEC_2D_DATA_TEARDOWN_SYCL \
+  getSyclDeviceData(m_div, div, m_array_length, qu); \
+  deallocSyclDeviceData(x, qu); \
+  deallocSyclDeviceData(y, qu); \
+  deallocSyclDeviceData(xdot, qu); \
+  deallocSyclDeviceData(ydot, qu); \
+  deallocSyclDeviceData(div, qu); \
+  deallocSyclDeviceData(real_zones, qu);
 
 void DEL_DOT_VEC_2D::runSyclVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type iend = m_domain->n_real_zones;
 
+  DEL_DOT_VEC_2D_DATA_SETUP;
+
   if ( vid == Base_SYCL ) {
-    {
-      ResReal_ptr x = m_x;
-      ResReal_ptr y = m_y;
-      ResReal_ptr xdot = m_xdot;
-      ResReal_ptr ydot = m_ydot;
 
-      Index_type v1,v2,v3,v4 ;
-      DEL_DOT_VEC_2D_DATA_SETUP_SYCL;
+    DEL_DOT_VEC_2D_DATA_SETUP_SYCL;
 
-      v4 = 0;
-      v1 = v4 + 1;
-      v2 = v1 + m_domain->jp;
-      v3 = v4 + m_domain->jp;
+    NDSET2D(m_domain->jp, x,x1,x2,x3,x4) ;
+    NDSET2D(m_domain->jp, y,y1,y2,y3,y4) ;
+    NDSET2D(m_domain->jp, xdot,fx1,fx2,fx3,fx4) ;
+    NDSET2D(m_domain->jp, ydot,fy1,fy2,fy3,fy4) ;
+
+    startTimer();
+    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
       const size_t grid_size = block_size * RAJA_DIVIDE_CEILING_INT(iend, block_size);
 
-      startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+      qu.submit([&] (cl::sycl::handler& h) {
+        h.parallel_for<class DelDotVec>(cl::sycl::nd_range<1> (grid_size, block_size),
+                                        [=] (cl::sycl::nd_item<1> item) {
 
-        qu.submit([&] (cl::sycl::handler& h)
-        {
-          auto div = d_div.get_access<cl::sycl::access::mode::write>(h);
-          auto real_zones = d_real_zones.get_access<cl::sycl::access::mode::read>(h);
-          auto x1 = d_x.get_access<cl::sycl::access::mode::read>(h, m_array_length, v1);
-          auto x2 = d_x.get_access<cl::sycl::access::mode::read>(h, m_array_length, v2);
-          auto x3 = d_x.get_access<cl::sycl::access::mode::read>(h, m_array_length, v3);
-          auto x4 = d_x.get_access<cl::sycl::access::mode::read>(h, m_array_length, v4);
-          auto y1 = d_y.get_access<cl::sycl::access::mode::read>(h, m_array_length, v1);
-          auto y2 = d_y.get_access<cl::sycl::access::mode::read>(h, m_array_length, v2);
-          auto y3 = d_y.get_access<cl::sycl::access::mode::read>(h, m_array_length, v3);
-          auto y4 = d_y.get_access<cl::sycl::access::mode::read>(h, m_array_length, v4);
-          auto fx1 = d_xdot.get_access<cl::sycl::access::mode::read>(h, m_array_length, v1);
-          auto fx2 = d_xdot.get_access<cl::sycl::access::mode::read>(h, m_array_length, v2);
-          auto fx3 = d_xdot.get_access<cl::sycl::access::mode::read>(h, m_array_length, v3);
-          auto fx4 = d_xdot.get_access<cl::sycl::access::mode::read>(h, m_array_length, v4);
-          auto fy1 = d_ydot.get_access<cl::sycl::access::mode::read>(h, m_array_length, v1);
-          auto fy2 = d_ydot.get_access<cl::sycl::access::mode::read>(h, m_array_length, v2);
-          auto fy3 = d_ydot.get_access<cl::sycl::access::mode::read>(h, m_array_length, v3);
-          auto fy4 = d_ydot.get_access<cl::sycl::access::mode::read>(h, m_array_length, v4);
+          Index_type ii = item.get_global_id(0);
+          if (ii < iend) {
+            DEL_DOT_VEC_2D_BODY_INDEX
+            DEL_DOT_VEC_2D_BODY
+          }
 
-          h.parallel_for<class syclDelDotVec>(cl::sycl::nd_range<1> {grid_size, block_size},
-                                              [=] (cl::sycl::nd_item<1> item) {
-
-            Index_type ii = item.get_group(0) * item.get_local_range().get(0) + item.get_local_id(0);
-            if (ii < iend) {
-              DEL_DOT_VEC_2D_BODY_INDEX
-              DEL_DOT_VEC_2D_BODY
-            }
-          });
         });
-      
-      }
-      stopTimer();
-    } // Buffer Destruction
+      });
+
+    }
+    qu.wait(); // Wait for computation to finish before stopping timer
+    stopTimer();
 
     DEL_DOT_VEC_2D_DATA_TEARDOWN_SYCL;
 

@@ -22,6 +22,7 @@
 #include <CL/sycl.hpp>
 
 #include <iostream>
+#include "common/SyclDataUtils.hpp"
 
 namespace rajaperf
 {
@@ -35,7 +36,9 @@ namespace basic
 \
   Int_type vsum = m_vsum_init; \
   Int_type vmin = m_vmin_init; \
-  Int_type vmax = m_vmax_init;
+  Int_type vmax = m_vmax_init; \
+\
+  force_memcpy_int(d_vec, qu);
 
 #define REDUCE3_INT_DATA_TEARDOWN_SYCL \
 
@@ -45,7 +48,7 @@ void REDUCE3_INT::runSyclVariant(VariantID vid)
   const Index_type ibegin = 0;
   const unsigned long iend = getRunSize();
 
-  if ( vid == Base_SYCL && 0 ) {
+  if ( vid == Base_SYCL ) {
     {
 
       REDUCE3_INT_DATA_SETUP_SYCL;
@@ -128,6 +131,7 @@ void REDUCE3_INT::runSyclVariant(VariantID vid)
         m_vmax = RAJA_MAX(m_vmax, vmax);
 
       }
+      qu.wait(); // Wait for computation to finish before stopping timer
       stopTimer();
     } // Original Vector Buffer Destruction
 

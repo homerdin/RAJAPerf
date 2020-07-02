@@ -24,23 +24,31 @@
 #include <iostream>
 
 #include <CL/sycl.hpp>
+#include "common/SyclDataUtils.hpp"
 
 namespace rajaperf 
 {
 namespace apps
 {
 
+  //
+  // Define thread block size for SYCL execution
+  //
+  const size_t block_size = 256;
+
+
 #define VOL3D_DATA_SETUP_SYCL \
-  const size_t block_size = qu.get_device().get_info<cl::sycl::info::device::max_work_group_size>(); \
-\
-  cl::sycl::buffer<Real_type> d_x {m_x, m_array_length}; \
-  cl::sycl::buffer<Real_type> d_y {m_y, m_array_length}; \
-  cl::sycl::buffer<Real_type> d_z {m_z, m_array_length}; \
-  cl::sycl::buffer<Real_type> d_vol {m_vol, m_array_length}; \
-\
-  const Real_type vnormq = m_vnormq; \
+  allocAndInitSyclDeviceData(x, m_x, m_array_length, qu); \
+  allocAndInitSyclDeviceData(y, m_y, m_array_length, qu); \
+  allocAndInitSyclDeviceData(z, m_z, m_array_length, qu); \
+  allocAndInitSyclDeviceData(vol, m_vol, m_array_length, qu);
 
 #define VOL3D_DATA_TEARDOWN_SYCL \
+  getSyclDeviceData(m_vol, vol, m_array_length, qu); \
+  deallocSyclDeviceData(x, qu); \
+  deallocSyclDeviceData(y, qu); \
+  deallocSyclDeviceData(z, qu); \
+  deallocSyclDeviceData(vol, qu);
 
 void VOL3D::runSyclVariant(VariantID vid)
 {
@@ -48,77 +56,60 @@ void VOL3D::runSyclVariant(VariantID vid)
   const Index_type ibegin = m_domain->fpz;
   const Index_type iend = m_domain->lpz+1;
 
-  const Index_type iterations = iend - ibegin;
+  VOL3D_DATA_SETUP;
 
   if ( vid == Base_SYCL ) {
-    {
-      ResReal_ptr x = m_x;
-      ResReal_ptr y = m_y;
-      ResReal_ptr z = m_z;
 
-      Index_type v0,v1,v2,v3,v4,v5,v6,v7 ;
+    VOL3D_DATA_SETUP_SYCL;
 
-      v0 = 0;
-      v1 = v0 + 1;
-      v2 = v0 + m_domain->jp;
-      v3 = v1 + m_domain->jp;
-      v4 = v0 + m_domain->kp;
-      v5 = v1 + m_domain->kp;
-      v6 = v2 + m_domain->kp;
-      v7 = v3 + m_domain->kp;
+    NDPTRSET(m_domain->jp, m_domain->kp, x,x0,x1,x2,x3,x4,x5,x6,x7) ;
+    NDPTRSET(m_domain->jp, m_domain->kp, y,y0,y1,y2,y3,y4,y5,y6,y7) ;
+    NDPTRSET(m_domain->jp, m_domain->kp, z,z0,z1,z2,z3,z4,z5,z6,z7) ;
 
-      VOL3D_DATA_SETUP_SYCL;
 
-      startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+    startTimer();
+    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
  
-        const size_t grid_size = block_size * RAJA_DIVIDE_CEILING_INT(iterations, block_size);
+      const size_t grid_size = block_size * RAJA_DIVIDE_CEILING_INT(iend, block_size);
 
-        qu.submit([&] (cl::sycl::handler& h) {
+      qu.submit([&] (cl::sycl::handler& h) {
+        h.parallel_for<class VOL3D>(cl::sycl::nd_range<1> (grid_size, block_size),
+                                    [=] (cl::sycl::nd_item<1> item) {
 
-          auto vol = d_vol.get_access<cl::sycl::access::mode::write>(h);
+          Index_type i = item.get_global_id(0);
+          i += ibegin;
+          if(i < iend) {
+            VOL3D_BODY
+          }
 
-          auto x0 = d_x.get_access<cl::sycl::access::mode::read>(h, m_array_length, v0);
-          auto x1 = d_x.get_access<cl::sycl::access::mode::read>(h, m_array_length, v1);
-          auto x2 = d_x.get_access<cl::sycl::access::mode::read>(h, m_array_length, v2);
-          auto x3 = d_x.get_access<cl::sycl::access::mode::read>(h, m_array_length, v3);
-          auto x4 = d_x.get_access<cl::sycl::access::mode::read>(h, m_array_length, v4);
-          auto x5 = d_x.get_access<cl::sycl::access::mode::read>(h, m_array_length, v5);
-          auto x6 = d_x.get_access<cl::sycl::access::mode::read>(h, m_array_length, v6);
-          auto x7 = d_x.get_access<cl::sycl::access::mode::read>(h, m_array_length, v7);
-          auto y0 = d_y.get_access<cl::sycl::access::mode::read>(h, m_array_length, v0);
-          auto y1 = d_y.get_access<cl::sycl::access::mode::read>(h, m_array_length, v1);
-          auto y2 = d_y.get_access<cl::sycl::access::mode::read>(h, m_array_length, v2);
-          auto y3 = d_y.get_access<cl::sycl::access::mode::read>(h, m_array_length, v3);
-          auto y4 = d_y.get_access<cl::sycl::access::mode::read>(h, m_array_length, v4);
-          auto y5 = d_y.get_access<cl::sycl::access::mode::read>(h, m_array_length, v5);
-          auto y6 = d_y.get_access<cl::sycl::access::mode::read>(h, m_array_length, v6);
-          auto y7 = d_y.get_access<cl::sycl::access::mode::read>(h, m_array_length, v7);
-          auto z0 = d_z.get_access<cl::sycl::access::mode::read>(h, m_array_length, v0);
-          auto z1 = d_z.get_access<cl::sycl::access::mode::read>(h, m_array_length, v1);
-          auto z2 = d_z.get_access<cl::sycl::access::mode::read>(h, m_array_length, v2);
-          auto z3 = d_z.get_access<cl::sycl::access::mode::read>(h, m_array_length, v3);
-          auto z4 = d_z.get_access<cl::sycl::access::mode::read>(h, m_array_length, v4);
-          auto z5 = d_z.get_access<cl::sycl::access::mode::read>(h, m_array_length, v5);
-          auto z6 = d_z.get_access<cl::sycl::access::mode::read>(h, m_array_length, v6);
-          auto z7 = d_z.get_access<cl::sycl::access::mode::read>(h, m_array_length, v7);
-
-          h.parallel_for<class VOL3D>(cl::sycl::nd_range<1> {grid_size, block_size},
-                                      [=] (cl::sycl::nd_item<1> item) {
-
-            Index_type i = item.get_group(0) * item.get_local_range(0) + item.get_local_id(0);
-            i += ibegin;
-
-            if(i < iend) {
-              VOL3D_BODY
-            }
-          });
         });
-      }
-
-      stopTimer();
-    } // Buffer Destruction
+      });
+    }
+    qu.wait(); // Wait for computation to finish before stopping timer
+    stopTimer();
  
+    VOL3D_DATA_TEARDOWN_SYCL;
+
+  } else if ( vid == RAJA_SYCL ) {
+
+    VOL3D_DATA_SETUP_SYCL;
+
+    NDPTRSET(m_domain->jp, m_domain->kp, x,x0,x1,x2,x3,x4,x5,x6,x7) ;
+    NDPTRSET(m_domain->jp, m_domain->kp, y,y0,y1,y2,y3,y4,y5,y6,y7) ;
+    NDPTRSET(m_domain->jp, m_domain->kp, z,z0,z1,z2,z3,z4,z5,z6,z7) ;
+
+    startTimer();
+    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
+
+      RAJA::forall< RAJA::sycl_exec<block_size, true /*async*/> >(
+        RAJA::RangeSegment(ibegin, iend), [=] (Index_type i) {
+        VOL3D_BODY;
+      });
+
+    }
+    qu.wait();
+    stopTimer();
+
     VOL3D_DATA_TEARDOWN_SYCL;
 
   } else {
