@@ -16,9 +16,9 @@ set(RAJA_COMPILER "RAJA_COMPILER_CLANG" CACHE STRING "")
 
 set(CMAKE_CXX_COMPILER "clang++" CACHE PATH "")
 
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fsycl -fsycl-unnamed-lambda -std=c++14" CACHE STRING "")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO " -O3 -g -fsycl -fsycl-unnamed-lambda -std=c++14" CACHE STRING "")
-set(CMAKE_CXX_FLAGS_DEBUG " -O0 -g -fsycl -fsycl-unnamed-lambda -std=c++14" CACHE STRING "")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fsycl -fsycl-unnamed-lambda -device-math-lib=fp64,fp32 -std=c++14" CACHE STRING "")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO " -O3 -g -fsycl -fsycl-unnamed-lambda -device-math-lib=fp64,fp32 -std=c++14" CACHE STRING "")
+set(CMAKE_CXX_FLAGS_DEBUG " -O0 -g -fsycl -fsycl-unnamed-lambda -device-math-lib=fp64,fp32 -std=c++14" CACHE STRING "")
 set(CMAKE_CXX_LINK_FLAGS "-fsycl -lOpenCL"  CACHE STRING "")
 
 set(RAJA_RANGE_ALIGN 4 CACHE INT "")
