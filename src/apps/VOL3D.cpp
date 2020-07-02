@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-19, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-20, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/COPYRIGHT file for details.
 //
@@ -13,24 +13,10 @@
 #include "AppsData.hpp"
 #include "common/DataUtils.hpp"
 
-#include <iostream>
-
 namespace rajaperf 
 {
 namespace apps
 {
-
-#define VOL3D_DATA_SETUP_CPU \
-  Real_ptr x = m_x; \
-  Real_ptr y = m_y; \
-  Real_ptr z = m_z; \
-  ResReal_ptr vol = m_vol; \
-\
-  const Real_type vnormq = m_vnormq;
-\
-  Real_ptr x0,x1,x2,x3,x4,x5,x6,x7 ; \
-  Real_ptr y0,y1,y2,y3,y4,y5,y6,y7 ; \
-  Real_ptr z0,z1,z2,z3,z4,z5,z6,z7 ;
 
 
 VOL3D::VOL3D(const RunParams& params)
@@ -67,120 +53,6 @@ void VOL3D::setUp(VariantID vid)
   allocAndInitDataConst(m_vol, m_array_length, 0.0, vid);
 
   m_vnormq = 0.083333333333333333; /* vnormq = 1/12 */  
-}
-
-void VOL3D::runKernel(VariantID vid)
-{
-  const Index_type run_reps = getRunReps();
-  const Index_type ibegin = m_domain->fpz;
-  const Index_type iend = m_domain->lpz+1;
-
-  VOL3D_DATA_SETUP_CPU;
-
-  NDPTRSET(m_domain->jp, m_domain->kp, x,x0,x1,x2,x3,x4,x5,x6,x7) ;
-  NDPTRSET(m_domain->jp, m_domain->kp, y,y0,y1,y2,y3,y4,y5,y6,y7) ;
-  NDPTRSET(m_domain->jp, m_domain->kp, z,z0,z1,z2,z3,z4,z5,z6,z7) ;
-
-  auto vol3d_lam = [=](Index_type i) {
-                     VOL3D_BODY;
-                   };
-
-  switch ( vid ) {
-
-    case Base_Seq : {
-
-      startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
-
-        for (Index_type i = ibegin ; i < iend ; ++i ) {
-          VOL3D_BODY;
-        }
-
-      }
-      stopTimer();
-
-      break;
-    } 
-
-#if defined(RUN_RAJA_SEQ)     
-    case RAJA_Seq : {
-
-      startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
-
-        RAJA::forall<RAJA::loop_exec>(
-          RAJA::RangeSegment(ibegin, iend), vol3d_lam);
-
-      }
-      stopTimer(); 
-
-      break;
-    }
-#endif // RUN_RAJA_SEQ
-
-#if defined(RAJA_ENABLE_OPENMP) && defined(RUN_OPENMP)                        
-    case Base_OpenMP : {
-
-      startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
-
-        #pragma omp parallel for 
-        for (Index_type i = ibegin ; i < iend ; ++i ) {
-          VOL3D_BODY;
-        }
-
-      }
-      stopTimer();
-
-      break;
-    }
-
-    case RAJA_OpenMP : {
-
-      startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
-
-        RAJA::forall<RAJA::omp_parallel_for_exec>(
-          RAJA::RangeSegment(ibegin, iend), vol3d_lam);
-
-      }
-      stopTimer();
-
-      break;
-    }
-#endif
-
-#if defined(RAJA_ENABLE_TARGET_OPENMP)
-    case Base_OpenMPTarget :
-    case RAJA_OpenMPTarget :
-    {
-      runOpenMPTargetVariant(vid);
-      break;
-    }
-#endif
-
-#if defined(RAJA_ENABLE_CUDA)
-    case Base_CUDA :
-    case RAJA_CUDA :
-    {
-      runCudaVariant(vid);
-      break;
-    }
-#endif
-
-#if defined(RAJA_ENABLE_SYCL)
-    case Base_SYCL :
-    {
-      runSyclVariant(vid);
-      break;
-    }
-#endif
-
-    default : {
-      std::cout << "\n  VOL3D : Unknown variant id = " << vid << std::endl;
-    }
-
-  }
 }
 
 void VOL3D::updateChecksum(VariantID vid)

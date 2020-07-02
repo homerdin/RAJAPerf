@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-19, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-20, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/COPYRIGHT file for details.
 //
@@ -24,11 +24,19 @@
 #define RAJAPerf_Basic_INIT_VIEW1D_OFFSET_HPP
 
 
+#define INIT_VIEW1D_OFFSET_DATA_SETUP \
+  Real_ptr a = m_a; \
+  const Real_type v = m_val;
+
 #define INIT_VIEW1D_OFFSET_BODY  \
   a[i-ibegin] = v;
 
 #define INIT_VIEW1D_OFFSET_BODY_RAJA  \
   view(i) = v;
+
+#define INIT_VIEW1D_OFFSET_VIEW_RAJA  \
+  using ViewType = RAJA::View<Real_type, RAJA::OffsetLayout<1> >; \
+  ViewType view(a, RAJA::make_offset_layout<1>({{1}}, {{iend+1}}));
 
 
 #include "common/KernelBase.hpp"
@@ -49,10 +57,11 @@ public:
   ~INIT_VIEW1D_OFFSET();
 
   void setUp(VariantID vid);
-  void runKernel(VariantID vid); 
   void updateChecksum(VariantID vid);
   void tearDown(VariantID vid);
 
+  void runSeqVariant(VariantID vid);
+  void runOpenMPVariant(VariantID vid);
   void runCudaVariant(VariantID vid);
   void runOpenMPTargetVariant(VariantID vid);
   void runSyclVariant(VariantID vid);

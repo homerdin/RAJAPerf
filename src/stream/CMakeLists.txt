@@ -1,5 +1,5 @@
 ###############################################################################
-# Copyright (c) 2017-19, Lawrence Livermore National Security, LLC
+# Copyright (c) 2017-20, Lawrence Livermore National Security, LLC
 # and RAJA Performance Suite project contributors.
 # See the RAJAPerf/COPYRIGHT file for details.
 #
@@ -9,22 +9,32 @@
 blt_add_library(
   NAME stream
   SOURCES ADD.cpp
+          ADD-Seq.cpp 
           ADD-Cuda.cpp
+          ADD-OMP.cpp
           ADD-OMPTarget.cpp
           ADD-Sycl.cpp
           COPY.cpp 
+          COPY-Seq.cpp 
           COPY-Cuda.cpp
+          COPY-OMP.cpp
           COPY-OMPTarget.cpp
           COPY-Sycl.cpp
           DOT.cpp 
+          DOT-Seq.cpp 
           DOT-Cuda.cpp 
+          DOT-OMP.cpp 
           DOT-OMPTarget.cpp 
           MUL.cpp 
+          MUL-Seq.cpp 
           MUL-Cuda.cpp 
+          MUL-OMP.cpp 
           MUL-OMPTarget.cpp 
           MUL-Sycl.cpp
           TRIAD.cpp 
+          TRIAD-Seq.cpp 
           TRIAD-Cuda.cpp 
+          TRIAD-OMP.cpp 
           TRIAD-OMPTarget.cpp 
           TRIAD-Sycl.cpp
   DEPENDS_ON common ${RAJA_PERFSUITE_DEPENDS}

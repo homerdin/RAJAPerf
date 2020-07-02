@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-19, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-20, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/COPYRIGHT file for details.
 //
@@ -20,6 +20,7 @@
 // 
 #define RP_USE_DOUBLE
 //#undef RP_USE_DOUBLE
+
 //#define RP_USE_FLOAT
 #undef RP_USE_FLOAT
 
@@ -103,15 +104,12 @@ using Real_type = float;
 #endif
 
 using Real_ptr = Real_type*;
-typedef Real_type* RAJA_RESTRICT ResReal_ptr;
-
 
 #if defined(RP_USE_COMPLEX)
 ///
 using Complex_type = std::complex<Real_type>;
 
 using Complex_ptr = Complex_type*;
-typedef Complex_type* RAJA_RESTRICT ResComplex_ptr;
 #endif
 
 

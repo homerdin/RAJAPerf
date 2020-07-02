@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-19, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-20, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/COPYRIGHT file for details.
 //
@@ -24,6 +24,12 @@
 
 #ifndef RAJAPerf_POLYBENCH_FLOYD_WARSHALL_HPP
 #define RAJAPerf_POLYBENCH_FLOYD_WARSHALL_HPP
+
+#define POLYBENCH_FLOYD_WARSHALL_DATA_SETUP \
+  Real_ptr pin = m_pin; \
+  Real_ptr pout = m_pout; \
+  const Index_type N = m_N;
+
 
 #define POLYBENCH_FLOYD_WARSHALL_BODY \
   pout[j + i*N] = pin[j + i*N] < pin[k + i*N] + pin[j + k*N] ? \
@@ -63,9 +69,11 @@ public:
 
 
   void setUp(VariantID vid);
-  void runKernel(VariantID vid); 
   void updateChecksum(VariantID vid);
   void tearDown(VariantID vid);
+
+  void runSeqVariant(VariantID vid);
+  void runOpenMPVariant(VariantID vid);
   void runCudaVariant(VariantID vid);
   void runOpenMPTargetVariant(VariantID vid);
   void runSyclVariant(VariantID vid);

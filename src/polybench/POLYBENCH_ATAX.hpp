@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-19, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-20, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/COPYRIGHT file for details.
 //
@@ -25,6 +25,14 @@
 
 #ifndef RAJAPerf_POLYBENCH_ATAX_HPP
 #define RAJAPerf_POLYBENCH_ATAX_HPP
+
+#define POLYBENCH_ATAX_DATA_SETUP \
+  Real_ptr tmp = m_tmp; \
+  Real_ptr y = m_y; \
+  Real_ptr x = m_x; \
+  Real_ptr A = m_A; \
+\
+  const Index_type N = m_N;
 
 
 #define POLYBENCH_ATAX_BODY1 \
@@ -100,9 +108,11 @@ public:
 
 
   void setUp(VariantID vid);
-  void runKernel(VariantID vid); 
   void updateChecksum(VariantID vid);
   void tearDown(VariantID vid);
+  
+  void runSeqVariant(VariantID vid);
+  void runOpenMPVariant(VariantID vid);
   void runCudaVariant(VariantID vid);
   void runOpenMPTargetVariant(VariantID vid);
   void runSyclVariant(VariantID vid);

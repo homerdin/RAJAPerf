@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-19, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-20, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/COPYRIGHT file for details.
 //
@@ -39,6 +39,18 @@
 
 #ifndef RAJAPerf_POLYBENCH_HEAT_3D_HPP
 #define RAJAPerf_POLYBENCH_HEAT_3D_HPP
+
+#define POLYBENCH_HEAT_3D_DATA_SETUP \
+  Real_ptr A = m_Ainit; \
+  Real_ptr B = m_Binit; \
+  const Index_type N = m_N; \
+  const Index_type tsteps = m_tsteps;
+
+#define POLYBENCH_HEAT_3D_DATA_RESET \
+  m_Ainit = m_A; \
+  m_Binit = m_B; \
+  m_A = A; \
+  m_B = B;
 
 
 #define POLYBENCH_HEAT_3D_BODY1 \
@@ -105,9 +117,11 @@ public:
 
 
   void setUp(VariantID vid);
-  void runKernel(VariantID vid); 
   void updateChecksum(VariantID vid);
   void tearDown(VariantID vid);
+
+  void runSeqVariant(VariantID vid);
+  void runOpenMPVariant(VariantID vid);
   void runCudaVariant(VariantID vid);
   void runOpenMPTargetVariant(VariantID vid);
   void runSyclVariant(VariantID vid);

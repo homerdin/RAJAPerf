@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-19, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-20, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/COPYRIGHT file for details.
 //
@@ -17,6 +17,10 @@
 #ifndef RAJAPerf_Stream_MUL_HPP
 #define RAJAPerf_Stream_MUL_HPP
 
+#define MUL_DATA_SETUP \
+  Real_ptr b = m_b; \
+  Real_ptr c = m_c; \
+  Real_type alpha = m_alpha;
 
 #define MUL_BODY  \
   b[i] = alpha * c[i] ;
@@ -40,10 +44,11 @@ public:
   ~MUL();
 
   void setUp(VariantID vid);
-  void runKernel(VariantID vid); 
   void updateChecksum(VariantID vid);
   void tearDown(VariantID vid);
 
+  void runSeqVariant(VariantID vid);
+  void runOpenMPVariant(VariantID vid);
   void runCudaVariant(VariantID vid);
   void runOpenMPTargetVariant(VariantID vid);
   void runSyclVariant(VariantID vid);

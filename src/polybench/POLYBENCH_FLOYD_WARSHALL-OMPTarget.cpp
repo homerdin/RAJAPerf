@@ -1,5 +1,5 @@
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
-// Copyright (c) 2017-19, Lawrence Livermore National Security, LLC
+// Copyright (c) 2017-20, Lawrence Livermore National Security, LLC
 // and RAJA Performance Suite project contributors.
 // See the RAJAPerf/COPYRIGHT file for details.
 //
@@ -25,9 +25,6 @@ namespace polybench
   int hid = omp_get_initial_device(); \
   int did = omp_get_default_device(); \
 \
-  Real_ptr pin; \
-  Real_ptr pout; \
-\
   allocAndInitOpenMPDeviceData(pin, m_pin, m_N * m_N, did, hid); \
   allocAndInitOpenMPDeviceData(pout, m_pout, m_N * m_N, did, hid);
 
@@ -41,8 +38,8 @@ namespace polybench
 void POLYBENCH_FLOYD_WARSHALL::runOpenMPTargetVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
-  const Index_type N = m_N;
 
+  POLYBENCH_FLOYD_WARSHALL_DATA_SETUP;
 
   if ( vid == Base_OpenMPTarget ) {
 
