@@ -43,15 +43,13 @@ Real_type trap_int_func(Real_type x,
    return denom;
 }
 
+  //
+  // Define thread block size for SYCL execution
+  //
+  const size_t block_size = 256;
 
-#define TRAP_INT_DATA_SETUP_SYCL \
-const size_t block_size = qu.get_device().get_info<cl::sycl::info::device::max_work_group_size>(); \
-\
-  Real_type x0 = m_x0; \
-  Real_type xp = m_xp; \
-  Real_type y = m_y; \
-  Real_type yp = m_yp; \
-  Real_type h = m_h;
+
+#define TRAP_INT_DATA_SETUP_SYCL  // nothing to do here...
 
 #define TRAP_INT_DATA_TEARDOWN_SYCL // nothing to do here...
 
@@ -61,71 +59,25 @@ void TRAP_INT::runSyclVariant(VariantID vid)
   const Index_type ibegin = 0;
   const Index_type iend = getRunSize();
 
-  if ( vid == Base_SYCL ) {
+  TRAP_INT_DATA_SETUP;
+
+  if (0) {// vid == Base_SYCL ) {
+
+  } else if ( vid == RAJA_SYCL ) {
 
     TRAP_INT_DATA_SETUP_SYCL;
 
-    Real_type sumx;
-
-    const size_t grid_size = block_size * RAJA_DIVIDE_CEILING_INT(iend, block_size);
-    const size_t groups = RAJA_DIVIDE_CEILING_INT(iend, block_size);
-    Real_type tsum[groups];
-
-    for (int i = 0; i < groups; i++)
-      tsum[i] = 0.0;
-
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
-      {
-        sumx = m_sumx_init;
 
-        cl::sycl::buffer<Real_type> d_sumx(tsum, groups);
+      RAJA::ReduceSum<RAJA::sycl_reduce, Real_type> sumx(m_sumx_init);
 
-        qu.submit( [&] (cl::sycl::handler& cgh)
-        {
-          auto t_sumx = d_sumx.get_access<cl::sycl::access::mode::write>(cgh);
+      RAJA::forall< RAJA::sycl_exec<block_size, true /*async*/> >(
+        RAJA::RangeSegment(ibegin, iend), [=] (Index_type i) {
+        TRAP_INT_BODY;
+      });
 
-          cl::sycl::accessor<Real_type, 1, cl::sycl::access::mode::read_write,
-                             cl::sycl::access::target::local> psumx(block_size, cgh);
-
-          cgh.parallel_for<class Reduce3>(cl::sycl::nd_range<1>{grid_size, block_size},
-                                        [=] (cl::sycl::nd_item<1> item ) {
-
-            Index_type i = item.get_group(0) * item.get_local_range(0) + item.get_local_id(0);
-            Index_type tid = item.get_local_id(0);
-
-            psumx[tid] = 0.0;
-
-            if (i < iend) {
-                  Real_type x = x0 + i*h;
-                  Real_type val = trap_int_func(x, y, xp, yp);
-                  psumx[tid] += val;
-            }
-
-            item.barrier(cl::sycl::access::fence_space::local_space);
-
-            for (i = item.get_local_range(0) / 2; i > 0; i /=2) {
-              if (tid < i) {
-                psumx[tid] += psumx[tid+i];
-              }
-
-              item.barrier(cl::sycl::access::fence_space::local_space);
-            }
-
-            if (tid == 0) {
-              t_sumx[0].fetch_add(psumx[tid]);
-            }
-          });
-        });
-
-      } // Buffer Destruction
-
-      // Final reduction on host, no double support for atomics on device
-      for(Index_type i = 0; i < groups; i++) {
-        sumx += tsum[i];
-      }
-
-      m_sumx += sumx * h;
+      m_sumx += static_cast<Real_type>(sumx.get()) * h;
 
     }
     stopTimer();

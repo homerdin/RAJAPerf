@@ -70,7 +70,7 @@ void VOL3D::runSyclVariant(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
  
-      const size_t grid_size = block_size * RAJA_DIVIDE_CEILING_INT(iend, block_size);
+      const size_t grid_size = block_size * RAJA_DIVIDE_CEILING_INT(iend - ibegin, block_size);
 
       qu.submit([&] (cl::sycl::handler& h) {
         h.parallel_for<class VOL3D>(cl::sycl::nd_range<1> (grid_size, block_size),

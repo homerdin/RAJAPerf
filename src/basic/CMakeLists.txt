@@ -60,10 +60,12 @@ blt_add_library(
           REDUCE3_INT-Cuda.cpp
           REDUCE3_INT-OMP.cpp
           REDUCE3_INT-OMPTarget.cpp
+          REDUCE3_INT-Sycl.cpp
           TRAP_INT.cpp
           TRAP_INT-Seq.cpp
           TRAP_INT-Cuda.cpp 
           TRAP_INT-OMPTarget.cpp 
-          TRAP_INT-OMP.cpp 
-  DEPENDS_ON common ${RAJA_PERFSUITE_DEPENDS}
+          TRAP_INT-OMP.cpp
+          TRAP_INT-Sycl.cpp
+  DEPENDS_ON common ${RAJA_PERFSUITE_DEPENDS} 
   )

@@ -32,12 +32,13 @@ blt_add_library(
           LTIMES-Cuda.cpp
           LTIMES-OMP.cpp
           LTIMES-OMPTarget.cpp
+          LTIMES-Sycl.cpp
           LTIMES_NOVIEW.cpp
           LTIMES_NOVIEW-Seq.cpp
           LTIMES_NOVIEW-Cuda.cpp
           LTIMES_NOVIEW-OMP.cpp
           LTIMES_NOVIEW-OMPTarget.cpp
-#          LTIMES_NOVIEW-Sycl.cpp
+          LTIMES_NOVIEW-Sycl.cpp
           PRESSURE.cpp 
           PRESSURE-Seq.cpp 
           PRESSURE-Cuda.cpp 

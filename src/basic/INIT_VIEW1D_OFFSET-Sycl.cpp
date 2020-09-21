@@ -71,14 +71,14 @@ void INIT_VIEW1D_OFFSET::runSyclVariant(VariantID vid)
             }
           });
         });
-
+        qu.wait();
       }
       qu.wait(); // Wait for computation to finish before stopping timer
       stopTimer();
     }
 
     INIT_VIEW1D_OFFSET_DATA_TEARDOWN_SYCL;
-#ifdef BRIAN
+
   } else if ( vid == RAJA_SYCL ) {
 
     INIT_VIEW1D_OFFSET_DATA_SETUP_SYCL;
@@ -98,7 +98,7 @@ void INIT_VIEW1D_OFFSET::runSyclVariant(VariantID vid)
     stopTimer();
 
     INIT_VIEW1D_OFFSET_DATA_TEARDOWN_SYCL;
-#endif
+
   } else {
      std::cout << "\n  INIT_VIEW1D_OFFSET : Unknown Sycl variant id = " << vid << std::endl;
   }

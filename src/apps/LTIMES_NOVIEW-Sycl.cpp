@@ -56,8 +56,8 @@ void LTIMES_NOVIEW::runSyclVariant(VariantID vid)
 
       qu.submit([&] (cl::sycl::handler& h) {
         h.parallel_for<class LTIMES_NOVIEW>(cl::sycl::nd_range<3> (
-                                              cl::sycl::range<3>(1, 1, num_z),
-                                              cl::sycl::range<3>(num_m, num_g, 1)),
+                                              cl::sycl::range<3>(num_m, num_g, num_z),
+                                              cl::sycl::range<3>(1, 1, 1)),
                                             [=] (cl::sycl::nd_item<3> item) {
 
           Index_type z = item.get_global_id(2);
@@ -83,9 +83,9 @@ void LTIMES_NOVIEW::runSyclVariant(VariantID vid)
     using EXEC_POL =
       RAJA::KernelPolicy<
         RAJA::statement::SyclKernel<
-          RAJA::statement::For<1, RAJA::sycl_group_3_loop,      //z
-            RAJA::statement::For<2, RAJA::sycl_local_2_loop,    //g
-              RAJA::statement::For<3, RAJA::sycl_local_1_loop, //m
+          RAJA::statement::For<1, RAJA::sycl_global_1<1>,      //z
+            RAJA::statement::For<2, RAJA::sycl_global_2<1>,    //g
+              RAJA::statement::For<3, RAJA::sycl_global_3<1>, //m
                 RAJA::statement::For<0, RAJA::seq_exec,       //d
                   RAJA::statement::Lambda<0>
                 >

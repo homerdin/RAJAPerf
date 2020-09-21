@@ -29,111 +29,52 @@ namespace rajaperf
 namespace basic
 {
 
+  //
+  // Define thread block size for SYCL execution
+  //
+  const size_t block_size = 256;
+
+
 #define REDUCE3_INT_DATA_SETUP_SYCL \
-  const size_t block_size = qu.get_device().get_info<cl::sycl::info::device::max_work_group_size>(); \
-\
-  cl::sycl::buffer<Int_type> d_vec {m_vec, iend}; \
-\
-  Int_type vsum = m_vsum_init; \
-  Int_type vmin = m_vmin_init; \
-  Int_type vmax = m_vmax_init; \
-\
-  force_memcpy_int(d_vec, qu);
+  allocAndInitSyclDeviceData(vec, m_vec, iend, qu);
 
 #define REDUCE3_INT_DATA_TEARDOWN_SYCL \
+  deallocSyclDeviceData(vec, qu);
+
 
 void REDUCE3_INT::runSyclVariant(VariantID vid)
 {
   const Index_type run_reps = getRunReps();
   const Index_type ibegin = 0;
-  const unsigned long iend = getRunSize();
+  const Index_type iend = getRunSize();
 
-  if ( vid == Base_SYCL ) {
-    {
+  REDUCE3_INT_DATA_SETUP;
 
-      REDUCE3_INT_DATA_SETUP_SYCL;
+  if (0) {// vid == Base_SYCL_ ) {
 
-      startTimer();
-      for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
-        {
-          cl::sycl::buffer<Int_type> d_vsum {&m_vsum_init, 1};
-          cl::sycl::buffer<Int_type> d_vmin {&m_vmin_init, 1};
-          cl::sycl::buffer<Int_type> d_vmax {&m_vmax_init, 1};
 
-          d_vsum.set_final_data(&vsum);
-          d_vmin.set_final_data(&vmin);
-          d_vmax.set_final_data(&vmax);
+  } else if ( vid == RAJA_SYCL ) {
 
-          qu.submit( [&] (cl::sycl::handler& h)
-          {
-            auto vec = d_vec.get_access<cl::sycl::access::mode::read>(h);
-            auto t_vsum =  d_vsum.get_access<cl::sycl::access::mode::atomic>(h);
-            auto t_vmin =  d_vmin.get_access<cl::sycl::access::mode::atomic>(h);
-            auto t_vmax =  d_vmax.get_access<cl::sycl::access::mode::atomic>(h);
+    REDUCE3_INT_DATA_SETUP_SYCL;
 
-            // Limits are templated.  Not allowed in kernel
-            Int_type t_sum_init = m_vsum_init;
-            Int_type t_min_init = m_vmin_init;
-            Int_type t_max_init = m_vmax_init;
+    startTimer();
+    for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-            // Local Memory
-            cl::sycl::accessor<Int_type, 1, cl::sycl::access::mode::read_write,
-                               cl::sycl::access::target::local> psum(block_size, h);
-            cl::sycl::accessor<Int_type, 1, cl::sycl::access::mode::read_write,
-                               cl::sycl::access::target::local> pmin(block_size, h);
-            cl::sycl::accessor<Int_type, 1, cl::sycl::access::mode::read_write,
-                               cl::sycl::access::target::local> pmax(block_size, h);
+      RAJA::ReduceSum<RAJA::sycl_reduce, Int_type> vsum(m_vsum_init);
+      RAJA::ReduceMin<RAJA::sycl_reduce, Int_type> vmin(m_vmin_init);
+      RAJA::ReduceMax<RAJA::sycl_reduce, Int_type> vmax(m_vmax_init);
 
-            const size_t grid_size = block_size * RAJA_DIVIDE_CEILING_INT(iend, block_size);
+      RAJA::forall< RAJA::sycl_exec<block_size, true /*async*/> >(
+        RAJA::RangeSegment(ibegin, iend), [=] (Index_type i) {
+        REDUCE3_INT_BODY_RAJA;
+      });
 
-            h.parallel_for<class Reduce3>(cl::sycl::nd_range<1>{grid_size, block_size},
-                                          [=] (cl::sycl::nd_item<1> item ) {
+      m_vsum += static_cast<Int_type>(vsum.get());
+      m_vmin = RAJA_MIN(m_vmin, static_cast<Int_type>(vmin.get()));
+      m_vmax = RAJA_MAX(m_vmax, static_cast<Int_type>(vmax.get()));
 
-              Index_type i = item.get_group(0) * item.get_local_range(0) + item.get_local_id(0);
-              Index_type tid = item.get_local_id(0);
-
-              // Initialize threads local memory
-              psum[tid] = t_sum_init;
-              pmin[tid] = t_min_init;
-              pmax[tid] = t_max_init;
-
-              if (i < iend) {
-                psum[tid] += vec[i];
-                pmin[tid] = RAJA_MIN(pmin[tid], vec[i]);
-                pmax[tid] = RAJA_MAX(pmax[tid], vec[i]);
-              }
-
-              item.barrier(cl::sycl::access::fence_space::local_space);
-
-              for (i = item.get_local_range(0) / 2; i > 0; i /=2) {
-                if (tid < i) {
-                  psum[tid] += psum[tid + i];
-                  pmin[tid] = RAJA_MIN(pmin[tid], pmin[tid + i]);
-                  pmax[tid] = RAJA_MAX(pmax[tid], pmax[tid + i]);
-                }
-
-                item.barrier(cl::sycl::access::fence_space::local_space);
-              }
-
-              if (tid == 0) {
-                t_vsum[0].fetch_add(psum[tid]);
-                t_vmin[0].fetch_min(pmin[tid]);
-                t_vmax[0].fetch_max(pmax[tid]);
-              }
-
-            });
-          });
-
-        } // buffer destruction
-
-        m_vsum += vsum;
-        m_vmin = RAJA_MIN(m_vmin, vmin);
-        m_vmax = RAJA_MAX(m_vmax, vmax);
-
-      }
-      qu.wait(); // Wait for computation to finish before stopping timer
-      stopTimer();
-    } // Original Vector Buffer Destruction
+    }
+    stopTimer();
 
     REDUCE3_INT_DATA_TEARDOWN_SYCL;
 
