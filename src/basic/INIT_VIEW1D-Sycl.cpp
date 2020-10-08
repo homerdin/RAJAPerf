@@ -87,7 +87,7 @@ void INIT_VIEW1D::runSyclVariant(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-      RAJA::forall< RAJA::sycl_exec<block_size  /*async*/> >(
+      RAJA::forall< RAJA::sycl_exec_trivial<block_size  /*async*/> >(
         RAJA::RangeSegment(ibegin, iend), [=] (Index_type i) {
         INIT_VIEW1D_BODY_RAJA;
       });

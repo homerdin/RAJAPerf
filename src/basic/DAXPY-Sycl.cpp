@@ -53,46 +53,34 @@ void DAXPY::runSyclVariant(VariantID vid)
 
   if ( vid == Base_SYCL ) {
 
-    DAXPY_DATA_SETUP_SYCL;
+    #include "DAXPY_Setup.hpp"
 
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-      const size_t grid_size = block_size * RAJA_DIVIDE_CEILING_INT(iend, block_size);
+      #include "DAXPY_Kernel.hpp"
 
-      qu.submit([&] (cl::sycl::handler& h) {
-        h.parallel_for<class DAXPY>(cl::sycl::nd_range<1>{grid_size, block_size},
-                                    [=] (cl::sycl::nd_item<1> item ) {
-
-          Index_type i = item.get_global_id(0);
-          if (i < iend) {
-            DAXPY_BODY
-          }
-
-        });
-      });
     }
     qu.wait(); // Wait for computation to finish before stopping timer
+
     stopTimer();
 
-    DAXPY_DATA_TEARDOWN_SYCL;
-
+    #include "DAXPY_Teardown.hpp"
+    
   } else if ( vid == RAJA_SYCL ) {
 
-    DAXPY_DATA_SETUP_SYCL;
+    #include "DAXPY_Setup.hpp"
+
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-      RAJA::forall< RAJA::sycl_exec<block_size, true> >(
-        RAJA::RangeSegment(ibegin, iend), [=] (Index_type i) {
-        DAXPY_BODY;
-      });
+      #include "DAXPY_RAJA_Kernel.hpp"
 
     }
     qu.wait();
     stopTimer();
 
-    DAXPY_DATA_TEARDOWN_SYCL;
+    #include "DAXPY_Teardown.hpp"
 
   } else {
      std::cout << "\n  DAXPY : Unknown Sycl variant id = " << vid << std::endl;

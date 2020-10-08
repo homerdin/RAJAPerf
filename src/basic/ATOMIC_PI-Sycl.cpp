@@ -81,7 +81,7 @@ void ATOMIC_PI::runSyclVariant(VariantID vid)
 
       initSyclDeviceData(pi, &m_pi_init, 1);
 
-      RAJA::forall< RAJA::sycl_exec<block_size, true /*async*/> >(
+      RAJA::forall< RAJA::sycl_exec_trivial<block_size, true /*async*/> >(
         RAJA::RangeSegment(ibegin, iend), [=] __device__ (Index_type i) {
           double x = (double(i) + 0.5) * dx;
           RAJA::atomicAdd<RAJA::sycl_atomic>(pi, dx / (1.0 + x * x));

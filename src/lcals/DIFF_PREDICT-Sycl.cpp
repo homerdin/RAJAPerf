@@ -85,7 +85,7 @@ void DIFF_PREDICT::runSyclVariant(VariantID vid)
     startTimer();
     for (RepIndex_type irep = 0; irep < run_reps; ++irep) {
 
-       RAJA::forall< RAJA::sycl_exec<block_size, true /*async*/> >(
+       RAJA::forall< RAJA::sycl_exec_trivial<block_size, true /*async*/> >(
          RAJA::RangeSegment(ibegin, iend), [=] (Index_type i) {
          DIFF_PREDICT_BODY;
        });

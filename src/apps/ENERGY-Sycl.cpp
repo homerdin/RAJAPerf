@@ -179,32 +179,32 @@ void ENERGY::runSyclVariant(VariantID vid)
 
       RAJA::region<RAJA::seq_region>( [=]() {
 
-        RAJA::forall< RAJA::sycl_exec<block_size, async> >(
+        RAJA::forall< RAJA::sycl_exec_trivial<block_size, async> >(
           RAJA::RangeSegment(ibegin, iend), [=] (Index_type i) {
           ENERGY_BODY1;
         });
 
-        RAJA::forall< RAJA::sycl_exec<block_size, async> >(
+        RAJA::forall< RAJA::sycl_exec_trivial<block_size, async> >(
           RAJA::RangeSegment(ibegin, iend), [=] (Index_type i) {
           ENERGY_BODY2;
         });
 
-        RAJA::forall< RAJA::sycl_exec<block_size, async> >(
+        RAJA::forall< RAJA::sycl_exec_trivial<block_size, async> >(
           RAJA::RangeSegment(ibegin, iend), [=] (Index_type i) {
           ENERGY_BODY3;
         });
 
-        RAJA::forall< RAJA::sycl_exec<block_size, async> >(
+        RAJA::forall< RAJA::sycl_exec_trivial<block_size, async> >(
           RAJA::RangeSegment(ibegin, iend), [=] (Index_type i) {
           ENERGY_BODY4;
         });
 
-        RAJA::forall< RAJA::sycl_exec<block_size, async> >(
+        RAJA::forall< RAJA::sycl_exec_trivial<block_size, async> >(
           RAJA::RangeSegment(ibegin, iend), [=] (Index_type i) {
           ENERGY_BODY5;
         });
 
-        RAJA::forall< RAJA::sycl_exec<block_size, async> >(
+        RAJA::forall< RAJA::sycl_exec_trivial<block_size, async> >(
           RAJA::RangeSegment(ibegin, iend), [=] (Index_type i) {
           ENERGY_BODY6;
         });
