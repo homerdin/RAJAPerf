@@ -19,8 +19,8 @@ BUILD_SUFFIX=sycl
 : ${BUILD_TYPE:=RelWithDebInfo}
 RAJA_HOSTCONFIG=../tpl/RAJA/host-configs/alcf-builds/sycl.cmake
 
-rm -rf build_${BUILD_SUFFIX}_${USER} >/dev/null
-mkdir build_${BUILD_SUFFIX}_${USER} && cd build_${BUILD_SUFFIX}_${USER}
+rm -rf build_${BUILD_SUFFIX} >/dev/null
+mkdir build_${BUILD_SUFFIX} && cd build_${BUILD_SUFFIX}
 
 cmake \
   -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
