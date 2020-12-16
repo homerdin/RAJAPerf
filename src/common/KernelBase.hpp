@@ -25,6 +25,10 @@
 #include <string>
 #include <iostream>
 
+#if defined(RAJA_ENABLE_SYCL)
+#include <CL/sycl.hpp>
+#endif
+
 namespace rajaperf {
 
 /*!
@@ -129,6 +133,10 @@ public:
 #if defined(RAJA_ENABLE_HIP)
   virtual void runHipVariant(VariantID vid) = 0;
 #endif
+#if defined(RAJA_ENABLE_SYCL)
+  virtual void runSyclVariant(VariantID vid) = 0;
+  static cl::sycl::queue qu;
+#endif  
 #if defined(RAJA_ENABLE_TARGET_OPENMP)
   virtual void runOpenMPTargetVariant(VariantID vid) = 0;
 #endif
