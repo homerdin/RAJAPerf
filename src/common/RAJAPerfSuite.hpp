@@ -198,6 +198,9 @@ enum VariantID {
   Base_HIP,
   RAJA_HIP,
 
+  Base_SYCL,
+  RAJA_SYCL,
+
   NumVariants // Keep this one last and NEVER comment out (!!)
 
 };

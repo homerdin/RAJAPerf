@@ -40,6 +40,9 @@ DAXPY::DAXPY(const RunParams& params)
 
   setVariantDefined( Base_HIP );
   setVariantDefined( RAJA_HIP );
+
+  setVariantDefined( Base_SYCL );
+  setVariantDefined( RAJA_SYCL );
 }
 
 DAXPY::~DAXPY() 

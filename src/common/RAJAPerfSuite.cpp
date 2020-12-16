@@ -227,6 +227,9 @@ static const std::string VariantNames [] =
   std::string("Base_HIP"),
   std::string("RAJA_HIP"),
 
+  std::string("Base_SYCL"),
+  std::string("RAJA_SYCL"),
+
   std::string("Unknown Variant")  // Keep this at the end and DO NOT remove....
 
 }; // END VariantNames
@@ -335,6 +338,14 @@ bool isVariantAvailable(VariantID vid)
     ret_val = true;
   }
 #endif
+
+#if defined(RAJA_ENABLE_SYCL)
+  if ( vid == Base_SYCL ||
+       vid == RAJA_SYCL ) {
+    ret_val = true;
+  }
+#endif
+
 
   return ret_val;
 }
@@ -569,5 +580,9 @@ KernelBase* getKernelObject(KernelID kid,
 
   return kernel;
 }
+
+#if defined(RAJA_ENABLE_SYCL)
+cl::sycl::queue KernelBase::qu;
+#endif
 
 }  // closing brace for rajaperf namespace
