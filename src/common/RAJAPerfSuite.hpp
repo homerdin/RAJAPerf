@@ -74,6 +74,7 @@ enum GroupID {
   Polybench,
   Stream,
   Apps,
+  Algorithm,
 
   NumGroups // Keep this one last and DO NOT remove (!!)
 
@@ -157,10 +158,17 @@ enum KernelID {
   Apps_DEL_DOT_VEC_2D,
   Apps_ENERGY,
   Apps_FIR,
+  Apps_HALOEXCHANGE,
   Apps_LTIMES,
   Apps_LTIMES_NOVIEW,
   Apps_PRESSURE,
   Apps_VOL3D,
+
+//
+// Algorithm kernels...
+//
+  Algorithm_SORT,
+  Algorithm_SORTPAIRS,
 
   NumKernels // Keep this one last and NEVER comment out (!!)
 
@@ -193,10 +201,14 @@ enum VariantID {
   RAJA_OpenMPTarget,
 
   Base_CUDA,
+  Lambda_CUDA,
   RAJA_CUDA,
+  RAJA_WORKGROUP_CUDA,
 
   Base_HIP,
+  Lambda_HIP,
   RAJA_HIP,
+  RAJA_WORKGROUP_HIP,
 
   Base_SYCL,
   RAJA_SYCL,

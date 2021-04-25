@@ -12,7 +12,7 @@
 
 #include "common/DataUtils.hpp"
 
-namespace rajaperf 
+namespace rajaperf
 {
 namespace basic
 {
@@ -36,16 +36,18 @@ INIT3::INIT3(const RunParams& params)
   setVariantDefined( RAJA_OpenMPTarget );
 
   setVariantDefined( Base_CUDA );
+  setVariantDefined( Lambda_CUDA );
   setVariantDefined( RAJA_CUDA );
 
   setVariantDefined( Base_HIP );
+  setVariantDefined( Lambda_HIP );
   setVariantDefined( RAJA_HIP );
 
   setVariantDefined( Base_SYCL );
   setVariantDefined( RAJA_SYCL );
 }
 
-INIT3::~INIT3() 
+INIT3::~INIT3()
 {
 }
 
