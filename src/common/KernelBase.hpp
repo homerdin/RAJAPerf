@@ -27,6 +27,7 @@
 
 #if defined(RAJA_ENABLE_SYCL)
 #include <CL/sycl.hpp>
+#include "camp/resource.hpp"
 #endif
 
 namespace rajaperf {
@@ -135,7 +136,9 @@ public:
 #endif
 #if defined(RAJA_ENABLE_SYCL)
   virtual void runSyclVariant(VariantID vid) = 0;
-  static cl::sycl::queue qu;
+  static cl::sycl::queue* qu;
+  static camp::resources::Resource sycl_res;
+
 #endif  
 #if defined(RAJA_ENABLE_TARGET_OPENMP)
   virtual void runOpenMPTargetVariant(VariantID vid) = 0;
